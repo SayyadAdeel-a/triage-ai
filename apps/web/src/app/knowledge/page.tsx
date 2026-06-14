@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { prisma } from "@/lib/prisma";
 import { Nav } from "@/components/nav";
 import { AddRuleForm } from "./add-rule-form";
