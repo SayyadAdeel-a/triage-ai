@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Email {
+  id                String   @id @default(cuid())
+  providerMessageId String   @unique
+  subject           String
+  senderName        String
+  senderEmail       String
+  providerCategory  String?  // e.g. "PROMOTIONS", "UPDATES" from Gmail
+  category          String   // "Reply Needed", "Important", "Ignore"
+  summary           String
+  draftReply        String?
+  confidenceScore   Int?
+  priority          Int?
+  replyNeeded       Boolean?
+  time              DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Knowledge {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  embedding String?
+  createdAt DateTime @default(now())
+}
+
+model Rule {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime @default(now())
+}
+
