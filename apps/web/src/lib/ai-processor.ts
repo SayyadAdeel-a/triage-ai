@@ -50,7 +50,7 @@ export async function processEmails() {
       arguments: { account: "personal", pageSize: 50, seen: false }
     });
     
-    const listText = (listResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+    const listText: string = (listResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
     if (listText.toLowerCase().includes("error") && !listText.includes("emails")) {
       return { success: false, message: `Server Error: ${listText.substring(0, 50)}...` };
     }
@@ -114,7 +114,7 @@ export async function processEmails() {
           name: "get_emails",
           arguments: { account: "personal", ids: batchIds, format: "text", maxLength: 1000 }
         });
-        const bodiesText = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+        const bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
 
         // ----- SECRET REDACTION PIPELINE -----
         let safeBodiesText = bodiesText;
@@ -134,7 +134,7 @@ export async function processEmails() {
 
         // ----- DETERMINISTIC FILTERING PIPELINE -----
         const emailBlocks = safeBodiesText.split('━━━ [');
-        const processedBlocks = emailBlocks.map(block => {
+        const processedBlocks = emailBlocks.map((block: string) => {
           if (!block.trim()) return block;
           const lowerBlock = block.toLowerCase();
           const isMarketing = lowerBlock.includes('unsubscribe') || 
@@ -306,7 +306,7 @@ export async function reProcessAllEmails() {
           name: "get_emails",
           arguments: { account: "personal", ids: batchIds, format: "text", maxLength: 1000 }
         });
-        const bodiesText = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+        const bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
 
         let safeBodiesText = bodiesText;
         safeBodiesText = safeBodiesText.replace(/https?:\/\/[^\s>]+(?:reset|token|verify|otp|magic|auth)[^\s>]+/gi, "[REDACTED_SECURE_LINK]");
@@ -316,7 +316,7 @@ export async function reProcessAllEmails() {
 
         // ----- DETERMINISTIC FILTERING PIPELINE -----
         const emailBlocksRe = safeBodiesText.split('━━━ [');
-        const processedBlocksRe = emailBlocksRe.map(block => {
+        const processedBlocksRe = emailBlocksRe.map((block: string) => {
           if (!block.trim()) return block;
           const lowerBlock = block.toLowerCase();
           const isMarketing = lowerBlock.includes('unsubscribe') || 
