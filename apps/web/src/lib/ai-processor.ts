@@ -57,7 +57,7 @@ export async function processEmails() {
 
     // Extract IDs like [123] from the text
     const matches = Array.from(listText.matchAll(/\[([^\]]+)\]/g));
-    let allIds = matches.map(m => m[1]).filter(id => id !== "INBOX");
+    let allIds = matches.map((m: any) => m[1]).filter(id => id !== "INBOX");
     
     if (allIds.length === 0) {
       return { success: true, message: "No unread emails found.", count: 0 };
