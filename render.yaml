@@ -2,6 +2,7 @@ services:
   - type: web
     name: triage-ai
     env: node
+    plan: free
     rootDir: apps/web
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npm start
