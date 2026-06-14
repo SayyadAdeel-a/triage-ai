@@ -18,16 +18,22 @@ const models = [
 ];
 
 async function generateTextWithFallback(options: any) {
-  let lastError;
-  for (const model of models) {
-    try {
-      return await generateText({ ...options, model });
-    } catch (e) {
-      console.warn(`Model failed, falling back to next provider. Error:`, e);
-      lastError = e;
-    }
+  const proxyUrl = process.env.PROXY_URL || 'https://triage-ai.onrender.com';
+  
+  const response = await fetch(`${proxyUrl}/api/categorize`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ prompt: options.prompt })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Proxy server failed: ${response.statusText}`);
   }
-  throw lastError;
+
+  const data = await response.json();
+  return { text: data.text };
 }
 
 export async function processEmails() {

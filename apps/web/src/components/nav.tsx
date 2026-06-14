@@ -11,6 +11,9 @@ export function Nav() {
         <Link href="/knowledge" className="text-gray-600 hover:text-black font-medium transition-colors">
           Knowledge Base
         </Link>
+        <Link href="/settings" className="text-gray-600 hover:text-black font-medium transition-colors">
+          Settings
+        </Link>
       </div>
       <div>
         <form action={logout}>

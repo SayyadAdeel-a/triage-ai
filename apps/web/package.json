@@ -1,10 +1,12 @@
 {
   "name": "web",
   "version": "0.1.0",
-  "private": true,
+  "main": "main.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "concurrently \"next dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "next build && electron-builder",
+    "next-build": "next build",
+    "electron-start": "electron .",
     "start": "next start",
     "lint": "eslint"
   },
@@ -37,10 +39,14 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.3",
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "prisma": "^5.20.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.10"
   }
 }

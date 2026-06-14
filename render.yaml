@@ -1,27 +1,10 @@
 services:
   - type: web
-    name: triage-ai
+    name: triage-ai-proxy
     env: node
-    plan: free
-    rootDir: apps/web
-    buildCommand: npm install && npx prisma generate && npm run build
+    rootDir: apps/proxy
+    buildCommand: npm install
     startCommand: npm start
     envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: DIRECT_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_URL
-        sync: false
-      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-        sync: false
       - key: GROQ_API_KEY
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: OPENROUTER_API_KEY
-        sync: false
-      - key: UPSTASH_REDIS_REST_URL
-        sync: false
-      - key: UPSTASH_REDIS_REST_TOKEN
         sync: false
