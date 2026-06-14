@@ -127,10 +127,10 @@ export async function processEmails() {
         safeBodiesText = safeBodiesText.replace(/(?:Bearer\s+|api_key[\s=:]+|token[\s=:]+)[A-Za-z0-9_.-]{20,}/gi, "$1[REDACTED_SECRET]");
         
         // 3. Redact OTPs (Verification codes: typically 4-8 digits near "code" or "otp")
-        safeBodiesText = safeBodiesText.replace(/(?:code|otp|pin|verification)[\s:=]+(\d{4,8})/gi, (match, p1) => match.replace(p1, "[REDACTED_OTP]"));
+        safeBodiesText = safeBodiesText.replace(/(?:code|otp|pin|verification)[\s:=]+(\d{4,8})/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_OTP]"));
         
         // 4. Redact Raw Passwords
-        safeBodiesText = safeBodiesText.replace(/(?:password is|pwd:)[\s*]+([^\s]+)/gi, (match, p1) => match.replace(p1, "[REDACTED_PASSWORD]"));
+        safeBodiesText = safeBodiesText.replace(/(?:password is|pwd:)[\s*]+([^\s]+)/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_PASSWORD]"));
 
         // ----- DETERMINISTIC FILTERING PIPELINE -----
         const emailBlocks = safeBodiesText.split('━━━ [');
@@ -311,8 +311,8 @@ export async function reProcessAllEmails() {
         let safeBodiesText = bodiesText;
         safeBodiesText = safeBodiesText.replace(/https?:\/\/[^\s>]+(?:reset|token|verify|otp|magic|auth)[^\s>]+/gi, "[REDACTED_SECURE_LINK]");
         safeBodiesText = safeBodiesText.replace(/(?:Bearer\s+|api_key[\s=:]+|token[\s=:]+)[A-Za-z0-9_.-]{20,}/gi, "$1[REDACTED_SECRET]");
-        safeBodiesText = safeBodiesText.replace(/(?:code|otp|pin|verification)[\s:=]+(\d{4,8})/gi, (match, p1) => match.replace(p1, "[REDACTED_OTP]"));
-        safeBodiesText = safeBodiesText.replace(/(?:password is|pwd:)[\s*]+([^\s]+)/gi, (match, p1) => match.replace(p1, "[REDACTED_PASSWORD]"));
+        safeBodiesText = safeBodiesText.replace(/(?:code|otp|pin|verification)[\s:=]+(\d{4,8})/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_OTP]"));
+        safeBodiesText = safeBodiesText.replace(/(?:password is|pwd:)[\s*]+([^\s]+)/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_PASSWORD]"));
 
         // ----- DETERMINISTIC FILTERING PIPELINE -----
         const emailBlocksRe = safeBodiesText.split('━━━ [');
