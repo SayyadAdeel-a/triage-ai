@@ -48,3 +48,33 @@ export function cosineSimilarity(vecA: number[], vecB: number[]): number {
     if (normA === 0 || normB === 0) return 0;
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
+
+export interface ParsedKnowledgeItem {
+  title: string;
+  content: string;
+  vec: number[] | null;
+}
+
+/**
+ * Perform a semantic search on a pre-parsed knowledge base using cosine similarity.
+ */
+export async function getRelevantKnowledgeFromParsed(
+  parsedKnowledge: ParsedKnowledgeItem[],
+  textToMatch: string,
+  limit: number = 3
+): Promise<string> {
+  if (parsedKnowledge.length === 0) return "";
+
+  const textEmbedding = await generateEmbedding(textToMatch);
+  const scored = parsedKnowledge
+    .filter(k => k.vec !== null)
+    .map(k => ({
+      title: k.title,
+      content: k.content,
+      score: cosineSimilarity(textEmbedding, k.vec!)
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const top = scored.slice(0, limit);
+  return top.map(k => `[Rule: ${k.title}]\n${k.content}`).join("\n\n");
+}

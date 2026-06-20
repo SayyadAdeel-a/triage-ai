@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTransition, useState } from "react";
 import { syncEmailsAction } from "./actions";
 
-export function SyncButton() {
+export function SyncButton({ inline = false }: { inline?: boolean }) {
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<string | null>(null);
 
@@ -22,15 +22,17 @@ export function SyncButton() {
   };
 
   return (
-    <div className="flex flex-col items-end">
+    <div className={inline ? "flex items-center" : "flex flex-col w-full"}>
       <Button 
         onClick={handleSync}
         disabled={isPending}
-        className="bg-black hover:bg-gray-800 text-white rounded-full px-6 shadow-md transition-transform hover:scale-105"
+        variant={inline ? "outline" : "default"}
+        size={inline ? "sm" : "default"}
+        className={inline ? "gap-2" : "w-full gap-2 transition-transform hover:scale-[1.02]"}
       >
         {isPending ? "Syncing..." : "Sync Emails via MCP"}
       </Button>
-      {status && <p className="text-xs text-gray-500 mt-2">{status}</p>}
+      {!inline && status && <p className="text-xs text-muted-foreground mt-2 text-center">{status}</p>}
     </div>
   );
 }

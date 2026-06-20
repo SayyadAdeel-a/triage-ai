@@ -1,0 +1,18 @@
+
+[[accounts]]
+name = "default"
+email = "${IMAP_EMAIL}"
+username = "${IMAP_EMAIL}"
+password = "${IMAP_PASSWORD}"
+
+[accounts.imap]
+host = "imap.gmail.com"
+port = 993
+tls = true
+verify_ssl = true
+
+[accounts.smtp]
+host = "smtp.gmail.com"
+port = 465
+tls = true
+verify_ssl = true

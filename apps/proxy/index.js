@@ -8,18 +8,31 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
+const PROXY_API_KEY = process.env.PROXY_API_KEY;
+if (!PROXY_API_KEY) {
+  console.warn("WARNING: PROXY_API_KEY not set. Proxy is unauthenticated!");
+}
+
 const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-app.post('/api/categorize', async (req, res) => {
+function authenticateProxy(req, res, next) {
+  if (!PROXY_API_KEY) return next();
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== `Bearer ${PROXY_API_KEY}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
+
+app.post('/api/categorize', authenticateProxy, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt) {
       return res.status(400).json({ error: 'Missing prompt' });
     }
 
-    // Attempt llama3-70b-8192 first
     let result;
     try {
         result = await generateText({

@@ -1,0 +1,32 @@
+appId: com.triageai.desktop
+productName: TriageAI
+directories:
+  output: dist
+files:
+  - "!**/.vscode/*"
+  - "!src/*"
+  - "!bkit-claude-code/*"
+  - "!scripts/*"
+  - "src/main/**/*"
+  - "src/preload/**/*"
+  - ".next/standalone/**/*"
+  - "public/**/*"
+  - "prisma/dev.db"
+mac:
+  category: public.app-category.productivity
+  target:
+    - dmg
+    - zip
+  icon: public/icon.png
+win:
+  target:
+    - nsis
+  icon: public/icon.png
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Office
+publish:
+  provider: generic
+  url: https://example.com/updates

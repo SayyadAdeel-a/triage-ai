@@ -1,77 +1,58 @@
-import { generateText } from "ai";
-import { createGroq } from "@ai-sdk/groq";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { prisma } from './prisma';
-import { generateEmbedding, cosineSimilarity } from "./vector-search";
+import { getRelevantKnowledgeFromParsed } from "./vector-search";
 import { getMcpClient } from './mcp-client';
+import { generateTextWithFallback } from './llm-client';
+import { DEFAULT_EMAIL_CATEGORIES } from './constants';
+import {
+  emailResponseSchema,
+  parseJsonResponse,
+  redactSecrets,
+  applyDeterministicFilters,
+  extractBodyMap,
+} from './email-pipeline';
 
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
-const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
-
-const models = [
-  groq('llama-3.1-8b-instant'),
-  google('gemini-1.5-flash'),
-  openrouter('meta-llama/llama-3.1-8b-instruct:free'),
-  groq('llama-3.3-70b-versatile')
-];
-
-async function generateTextWithFallback(options: any) {
-  const proxyUrl = process.env.PROXY_URL || 'https://triage-ai.onrender.com';
-  
-  const response = await fetch(`${proxyUrl}/api/categorize`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ prompt: options.prompt })
+function cleanEmailText(text: string): string {
+  let cleaned = text.replace(/https?:\/\/[^\s\)]+/g, (match) => {
+    return match.length > 40 ? '[link]' : match;
   });
-
-  if (!response.ok) {
-    throw new Error(`Proxy server failed: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  return { text: data.text };
+  cleaned = cleaned.replace(/\(\s*\[link\]\s*\)/g, '');
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  cleaned = cleaned.replace(/\n\s*-\s*\n\s*/g, '\n- ');
+  return cleaned.trim();
 }
 
-export async function processEmails() {
+export async function processEmails(userId: string) {
   console.log("Starting email processing cycle...");
-  
+
   let mcp;
   try {
-    mcp = await getMcpClient();
+    mcp = await getMcpClient(userId);
   } catch (error) {
     console.error("Failed to connect to MCP:", error);
     return { success: false, message: "Failed to connect to email server." };
   }
-  
+
   try {
-    // 1. Fetch email IDs
     console.log("Fetching unread emails...");
     const listResponse = await mcp.client.callTool({
       name: "list_emails",
-      // Pulling up to 50 emails to process in batches
-      arguments: { account: "personal", pageSize: 50, seen: false }
+      arguments: { account: "default", pageSize: 50, seen: false }
     });
-    
+
     const listText: string = (listResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
     if (listText.toLowerCase().includes("error") && !listText.includes("emails")) {
       return { success: false, message: `Server Error: ${listText.substring(0, 50)}...` };
     }
 
-    // Extract IDs like [123] from the text
     const matches = Array.from(listText.matchAll(/\[([^\]]+)\]/g));
-    let allIds = matches.map((m: any) => m[1]).filter(id => id !== "INBOX");
-    
+    let allIds = Array.from(new Set(matches.map((m: any) => m[1]).filter(id => id !== "INBOX")));
+
     if (allIds.length === 0) {
       return { success: true, message: "No unread emails found.", count: 0 };
     }
 
-    // 2. Check DB to avoid reprocessing
     const existing = await prisma.email.findMany({
-      where: { providerMessageId: { in: allIds } },
+      where: { providerMessageId: { in: allIds }, userId },
       select: { providerMessageId: true }
     });
     const existingIds = existing.map(e => e.providerMessageId);
@@ -81,102 +62,52 @@ export async function processEmails() {
       return { success: true, message: "No new emails to process.", count: 0 };
     }
 
-    // 3.5 Fetch Categories & Knowledge Base
-    let dbCategories = await prisma.category.findMany();
+    let dbCategories = await prisma.category.findMany({ where: { userId } });
     if (dbCategories.length === 0) {
-      const defaults = ["Reply Needed", "Important", "Ignore", "Newsletter", "Receipts", "Sensitive"];
       await prisma.category.createMany({
-        data: defaults.map(name => ({ name }))
+        data: DEFAULT_EMAIL_CATEGORIES.map(name => ({ name, userId }))
       });
-      dbCategories = await prisma.category.findMany();
+      dbCategories = await prisma.category.findMany({ where: { userId } });
     }
-    const categoryNames = dbCategories.map(c => c.name).join(", ");
 
-    // Fetch Rules (Static Instructions)
-    const dbRules = await prisma.rule.findMany();
+    const dbRules = await prisma.rule.findMany({ where: { userId } });
     const rulesText = dbRules.map(r => `[Rule: ${r.title}]\n${r.content}`).join("\n\n");
-    const globalRulesPrompt = rulesText 
+    const globalRulesPrompt = rulesText
       ? `\n\n--- AI INSTRUCTIONS (MUST OBEY) ---\n${rulesText}\n-----------------------------------\n`
       : "";
 
-    // Fetch all knowledge records and parse embeddings once
-    const knowledgeBase = await prisma.knowledge.findMany();
+    const knowledgeBase = await prisma.knowledge.findMany({ where: { userId }, take: 500 });
     const parsedKnowledge = knowledgeBase.map(k => ({
       ...k,
       vec: k.embedding ? JSON.parse(k.embedding) : null
     })).filter(k => k.vec !== null);
 
-    console.log(`Found ${newIds.length} new emails. Processing in batches of 5...`);
-    
+    console.log(`Found ${newIds.length} new emails. Processing in batches of 3...`);
+
     let processedCount = 0;
 
-    // Process in chunks of 2 to avoid token limits
-    for (let i = 0; i < newIds.length; i += 2) {
-      const batchIds = newIds.slice(i, i + 2);
-      console.log(`Fetching bodies for batch ${i / 2 + 1} (${batchIds.length} emails)...`);
-      
+    for (let i = 0; i < newIds.length; i += 3) {
+      const batchIds = newIds.slice(i, i + 3);
+      console.log(`Fetching bodies for batch ${Math.floor(i / 3) + 1} (${batchIds.length} emails)...`);
+
       try {
         const bodiesResponse = await mcp.client.callTool({
           name: "get_emails",
-          arguments: { account: "personal", ids: batchIds, format: "text", maxLength: 1000 }
+          arguments: { account: "default", ids: batchIds, format: "text", maxLength: 3000 }
         });
-        const bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+        let bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+        bodiesText = cleanEmailText(bodiesText);
 
-        // ----- SECRET REDACTION PIPELINE -----
-        let safeBodiesText = bodiesText;
-        
-        // 1. Redact Password Reset / Auth Links
-        safeBodiesText = safeBodiesText.replace(/https?:\/\/[^\s>]+(?:reset|token|verify|otp|magic|auth)[^\s>]+/gi, "[REDACTED_SECURE_LINK]");
-        
-        // 2. Redact API Keys / Bearer Tokens (High entropy strings length 24+)
-        // Specifically look for Bearer or common key prefixes, or just long base64/hex strings
-        safeBodiesText = safeBodiesText.replace(/(?:Bearer\s+|api_key[\s=:]+|token[\s=:]+)[A-Za-z0-9_.-]{20,}/gi, "$1[REDACTED_SECRET]");
-        
-        // 3. Redact OTPs (Verification codes: typically 4-8 digits near "code" or "otp")
-        safeBodiesText = safeBodiesText.replace(/(?:code|otp|pin|verification)[\s:=]+(\d{4,8})/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_OTP]"));
-        
-        // 4. Redact Raw Passwords
-        safeBodiesText = safeBodiesText.replace(/(?:password is|pwd:)[\s*]+([^\s]+)/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_PASSWORD]"));
-
-        // ----- DETERMINISTIC FILTERING PIPELINE -----
-        const emailBlocks = safeBodiesText.split('━━━ [');
-        const processedBlocks = emailBlocks.map((block: string) => {
-          if (!block.trim()) return block;
-          const lowerBlock = block.toLowerCase();
-          const isMarketing = lowerBlock.includes('unsubscribe') || 
-                              lowerBlock.includes('view in browser') || 
-                              lowerBlock.includes('manage preferences') ||
-                              lowerBlock.includes('opt out');
-          if (isMarketing) {
-            return block.replace(/From:\s+[^\n]+/, (match) => `${match}\nDETERMINISTIC SIGNAL: This email contains a mass-mailing footprint (e.g. 'unsubscribe'). It NEVER 'Needs Reply'. Usually, classify as 'Newsletters' or 'Promotions'. HOWEVER, if it's a Google Security/Account Alert, classify as 'Google Alerts'. If it mentions the user's products (e.g. 'Tenreq'), classify as 'Important'. If it is a transactional receipt/confirmation, classify as 'Notifications'.`);
-          }
-          return block;
-        });
-        safeBodiesText = processedBlocks.join('━━━ [');
-
-        // If an email is explicitly a Google Workspace billing or admin alert, it might not have secrets, but we want to ensure AI categorizes it. 
-        // We will pass the safe text to AI. If it's extremely sensitive, AI can categorize it as 'Sensitive' and we'll see it.
+        const safeBodiesText = applyDeterministicFilters(redactSecrets(bodiesText));
 
         console.log(`Running semantic search (RAG) for batch (${batchIds.length} safe emails)...`);
-        // Embed the safe batch text
-        const batchEmbedding = await generateEmbedding(safeBodiesText);
-        
-        // Calculate similarity for all rules
-        const scoredRules = parsedKnowledge.map(k => ({
-          ...k,
-          score: cosineSimilarity(batchEmbedding, k.vec)
-        })).sort((a, b) => b.score - a.score);
-
-        // Pick Top 3
-        const top3 = scoredRules.slice(0, 3);
-        const knowledgeText = top3.map(k => `[Rule: ${k.title}]\n${k.content}`).join("\n\n");
-        const knowledgePrompt = knowledgeText 
+        const knowledgeText = await getRelevantKnowledgeFromParsed(parsedKnowledge as any, safeBodiesText);
+        const knowledgePrompt = knowledgeText
           ? `\n\n--- KNOWLEDGE BASE (TOP RELEVANT) ---\nYou MUST strictly follow these rules and information when drafting replies:\n${knowledgeText}\n----------------------\n`
           : "";
 
-        console.log("Calling Groq to categorize and summarize batch...");
+        console.log("Calling AI to categorize and summarize batch...");
 
-        // 4. Send the safe chunk to AI with fallback
         const { text } = await generateTextWithFallback({
           prompt: `Analyze the following unread emails from a founder's inbox.
 The emails are provided in a text dump below. Each email is separated and includes its [ID], Subject, Sender, Date, and Body.
@@ -203,7 +134,12 @@ For each email:
 7. Generate a concise summary (max 2 lines).
 8. If 'replyNeeded' is true, generate a draft response. The reply MUST be in the style of a busy startup founder: extremely short, direct, and conversational. NO corporate jargon. NO formal greetings. Just answer or acknowledge immediately. Use the KNOWLEDGE BASE provided below to answer any questions accurately. If the knowledge base says to decline something, decline it politely. Otherwise, set draftReply to null.${knowledgePrompt}
 
-You MUST respond ONLY with a raw JSON object matching exactly this structure. Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
+You MUST respond ONLY with a raw JSON object matching exactly this structure. 
+CRITICAL JSON RULES:
+- MUST be valid JSON.
+- Escape all double quotes inside strings using \".
+- Do NOT use raw newlines inside strings, use \n instead.
+- Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
 {
   "emails": [
     {
@@ -225,35 +161,48 @@ Emails to process:
 ${safeBodiesText}`
         });
 
-        // Parse the JSON manually robustly
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("Could not extract JSON from AI response.");
-        const cleanText = jsonMatch[0];
-        const object = JSON.parse(cleanText);
-        // 5. Save to DB
+        const object = parseJsonResponse(text, emailResponseSchema);
+
+        // Save redacted bodies to DB (Issue 7 fix)
+        const safeBodyMap = extractBodyMap(safeBodiesText);
+
         for (const email of object.emails) {
-          const emailId = email.id || email.messageId;
+          const emailId = email.id;
           if (!batchIds.includes(emailId)) continue;
-          
-          await prisma.email.create({
-            data: {
+
+          await prisma.email.upsert({
+            where: { providerMessageId: emailId },
+            update: {
+              subject: email.subject,
+              senderName: email.senderName,
+              senderEmail: email.senderEmail,
+              category: email.category,
+              priority: email.priority,
+              replyNeeded: email.replyNeeded,
+              confidenceScore: email.confidenceScore,
+              summary: email.summary,
+              draftReply: email.draftReply,
+              originalBody: safeBodyMap.get(emailId) || null,
+            },
+            create: {
+              userId,
               providerMessageId: emailId,
               subject: email.subject,
               senderName: email.senderName,
               senderEmail: email.senderEmail,
               category: email.category,
-              priority: email.priority || 1,
-              replyNeeded: email.replyNeeded || false,
-              confidenceScore: email.confidenceScore || 0,
+              priority: email.priority,
+              replyNeeded: email.replyNeeded,
+              confidenceScore: email.confidenceScore,
               summary: email.summary,
               draftReply: email.draftReply,
+              originalBody: safeBodyMap.get(emailId) || null,
             }
           });
           processedCount++;
         }
       } catch (e) {
-        console.error(`Failed to process batch ${i / 5 + 1}:`, e);
-        // Continue to the next batch even if this one fails
+        console.error(`Failed to process batch ${Math.floor(i / 3) + 1}:`, e);
       }
     }
 
@@ -266,84 +215,54 @@ ${safeBodiesText}`
   }
 }
 
-export async function reProcessAllEmails() {
+export async function reProcessAllEmails(userId: string) {
   console.log("Starting full re-processing cycle...");
-  
+
   let mcp;
   try {
-    mcp = await getMcpClient();
+    mcp = await getMcpClient(userId);
   } catch (error) {
     console.error("Failed to connect to MCP:", error);
     return { success: false, message: "Failed to connect to email server." };
   }
-  
+
   try {
-    const existing = await prisma.email.findMany({ select: { providerMessageId: true } });
-    const allIds = existing.map(e => e.providerMessageId).filter(id => !id.startsWith('demo-'));
+    const existing = await prisma.email.findMany({ where: { userId }, select: { providerMessageId: true }, take: 500 });
+    const allIds = Array.from(new Set(existing.map(e => e.providerMessageId).filter(id => !id.startsWith('demo-'))));
 
     if (allIds.length === 0) {
       return { success: true, message: "No real emails in DB to re-process.", count: 0 };
     }
 
-    let dbCategories = await prisma.category.findMany();
-    const categoryNames = dbCategories.map(c => c.name).join(", ");
-
-    const dbRules = await prisma.rule.findMany();
+    const dbRules = await prisma.rule.findMany({ where: { userId } });
     const rulesText = dbRules.map(r => `[Rule: ${r.title}]\n${r.content}`).join("\n\n");
     const globalRulesPrompt = rulesText ? `\n\n--- AI INSTRUCTIONS (MUST OBEY) ---\n${rulesText}\n-----------------------------------\n` : "";
 
-    const knowledgeBase = await prisma.knowledge.findMany();
+    const knowledgeBase = await prisma.knowledge.findMany({ where: { userId }, take: 500 });
     const parsedKnowledge = knowledgeBase.map(k => ({
       ...k,
       vec: k.embedding ? JSON.parse(k.embedding) : null
     })).filter(k => k.vec !== null);
 
-    console.log(`Found ${allIds.length} existing emails to re-process. Processing in batches of 5...`);
-    
+    console.log(`Found ${allIds.length} existing emails to re-process. Processing in batches of 3...`);
+
     let processedCount = 0;
 
-    // Process in chunks of 2 to avoid token limits
-    for (let i = 0; i < allIds.length; i += 2) {
-      const batchIds = allIds.slice(i, i + 2);
-      console.log(`Fetching bodies for batch ${i / 2 + 1} (${batchIds.length} emails)...`);
-      
+    for (let i = 0; i < allIds.length; i += 3) {
+      const batchIds = allIds.slice(i, i + 3);
+      console.log(`Fetching bodies for batch ${Math.floor(i / 3) + 1} (${batchIds.length} emails)...`);
+
       try {
         const bodiesResponse = await mcp.client.callTool({
           name: "get_emails",
-          arguments: { account: "personal", ids: batchIds, format: "text", maxLength: 1000 }
+          arguments: { account: "default", ids: batchIds, format: "text", maxLength: 3000 }
         });
-        const bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+        let bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+        bodiesText = cleanEmailText(bodiesText);
 
-        let safeBodiesText = bodiesText;
-        safeBodiesText = safeBodiesText.replace(/https?:\/\/[^\s>]+(?:reset|token|verify|otp|magic|auth)[^\s>]+/gi, "[REDACTED_SECURE_LINK]");
-        safeBodiesText = safeBodiesText.replace(/(?:Bearer\s+|api_key[\s=:]+|token[\s=:]+)[A-Za-z0-9_.-]{20,}/gi, "$1[REDACTED_SECRET]");
-        safeBodiesText = safeBodiesText.replace(/(?:code|otp|pin|verification)[\s:=]+(\d{4,8})/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_OTP]"));
-        safeBodiesText = safeBodiesText.replace(/(?:password is|pwd:)[\s*]+([^\s]+)/gi, (match: string, p1: string) => match.replace(p1, "[REDACTED_PASSWORD]"));
+        const safeBodiesText = applyDeterministicFilters(redactSecrets(bodiesText));
 
-        // ----- DETERMINISTIC FILTERING PIPELINE -----
-        const emailBlocksRe = safeBodiesText.split('━━━ [');
-        const processedBlocksRe = emailBlocksRe.map((block: string) => {
-          if (!block.trim()) return block;
-          const lowerBlock = block.toLowerCase();
-          const isMarketing = lowerBlock.includes('unsubscribe') || 
-                              lowerBlock.includes('view in browser') || 
-                              lowerBlock.includes('manage preferences') ||
-                              lowerBlock.includes('opt out');
-          if (isMarketing) {
-            return block.replace(/From:\s+[^\n]+/, (match) => `${match}\nDETERMINISTIC SIGNAL: This email contains a mass-mailing footprint (e.g. 'unsubscribe'). It NEVER 'Needs Reply'. Usually, classify as 'Newsletters' or 'Promotions'. HOWEVER, if it's a Google Security/Account Alert, classify as 'Google Alerts'. If it mentions the user's products (e.g. 'Tenreq'), classify as 'Important'. If it is a transactional receipt/confirmation, classify as 'Notifications'.`);
-          }
-          return block;
-        });
-        safeBodiesText = processedBlocksRe.join('━━━ [');
-        const batchEmbedding = await generateEmbedding(safeBodiesText);
-        
-        const scoredRules = parsedKnowledge.map(k => ({
-          ...k,
-          score: cosineSimilarity(batchEmbedding, k.vec)
-        })).sort((a, b) => b.score - a.score);
-
-        const top3 = scoredRules.slice(0, 3);
-        const knowledgeText = top3.map(k => `[Rule: ${k.title}]\n${k.content}`).join("\n\n");
+        const knowledgeText = await getRelevantKnowledgeFromParsed(parsedKnowledge as any, safeBodiesText);
         const knowledgePrompt = knowledgeText ? `\n\n--- KNOWLEDGE BASE (TOP RELEVANT) ---\nYou MUST strictly follow these rules and information when drafting replies:\n${knowledgeText}\n----------------------\n` : "";
 
         console.log("Calling AI to categorize and summarize batch...");
@@ -374,7 +293,12 @@ For each email:
 7. Generate a concise summary (max 2 lines).
 8. If 'replyNeeded' is true, generate a draft response. The reply MUST be in the style of a busy startup founder: extremely short, direct, and conversational. NO corporate jargon. NO formal greetings. Just answer or acknowledge immediately. Use the KNOWLEDGE BASE provided below to answer any questions accurately. If the knowledge base says to decline something, decline it politely. Otherwise, set draftReply to null.${knowledgePrompt}
 
-You MUST respond ONLY with a raw JSON object matching exactly this structure. Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
+You MUST respond ONLY with a raw JSON object matching exactly this structure. 
+CRITICAL JSON RULES:
+- MUST be valid JSON.
+- Escape all double quotes inside strings using \".
+- Do NOT use raw newlines inside strings, use \n instead.
+- Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
 {
   "emails": [
     {
@@ -396,33 +320,46 @@ Emails to process:
 ${safeBodiesText}`
         });
 
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("Could not extract JSON from AI response.");
-        const cleanText = jsonMatch[0];
-        const object = JSON.parse(cleanText);
+        const object = parseJsonResponse(text, emailResponseSchema);
+        const safeBodyMap = extractBodyMap(safeBodiesText);
 
         for (const email of object.emails) {
-          const emailId = email.id || email.messageId;
+          const emailId = email.id;
           if (!batchIds.includes(emailId)) continue;
-          
-          await prisma.email.update({
+
+          await prisma.email.upsert({
             where: { providerMessageId: emailId },
-            data: {
+            update: {
               subject: email.subject,
               senderName: email.senderName,
               senderEmail: email.senderEmail,
               category: email.category,
-              priority: email.priority || 1,
-              replyNeeded: email.replyNeeded || false,
-              confidenceScore: email.confidenceScore || 0,
+              priority: email.priority,
+              replyNeeded: email.replyNeeded,
+              confidenceScore: email.confidenceScore,
               summary: email.summary,
               draftReply: email.draftReply,
+              originalBody: safeBodyMap.get(emailId) || null,
+            },
+            create: {
+              userId,
+              providerMessageId: emailId,
+              subject: email.subject,
+              senderName: email.senderName,
+              senderEmail: email.senderEmail,
+              category: email.category,
+              priority: email.priority,
+              replyNeeded: email.replyNeeded,
+              confidenceScore: email.confidenceScore,
+              summary: email.summary,
+              draftReply: email.draftReply,
+              originalBody: safeBodyMap.get(emailId) || null,
             }
           });
           processedCount++;
         }
       } catch (e) {
-        console.error(`Failed to process batch ${i / 5 + 1}:`, e);
+        console.error(`Failed to process batch ${Math.floor(i / 3) + 1}:`, e);
       }
     }
 

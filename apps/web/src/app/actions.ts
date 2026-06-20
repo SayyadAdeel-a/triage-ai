@@ -1,26 +1,14 @@
 "use server";
 import { processEmails, reProcessAllEmails } from "@/lib/ai-processor";
+import { reProcessAllLinkedInMessages, processLinkedInMessages } from "@/lib/linkedin-processor";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { generateEmbedding } from "@/lib/vector-search";
-import { generateText } from "ai";
-import { createGroq } from '@ai-sdk/groq';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { ratelimit } from "@/lib/ratelimit";
-
-const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
-const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
-
-const models = [
-  groq('llama-3.1-8b-instant'),
-  google('gemini-1.5-flash'),
-  openrouter('meta-llama/llama-3.1-8b-instruct:free'),
-  groq('llama-3.3-70b-versatile')
-];
+import { generateTextWithLocalFallback } from "@/lib/llm-client";
+import { DEFAULT_EMAIL_CATEGORIES } from "@/lib/constants";
 
 // --- Zod Validation Schemas ---
 const categorySchema = z.object({
@@ -33,7 +21,6 @@ const ruleSchema = z.object({
 });
 
 const idSchema = z.string().cuid({ message: "Invalid ID format" });
-const idOrUuidSchema = z.string().min(1); // Some IDs might be provider message IDs
 
 const bulkKnowledgeSchema = z.object({
   content: z.string().min(1, "Content is required").max(100000, "Payload too large")
@@ -55,24 +42,10 @@ async function requireAuth() {
 }
 
 async function checkRateLimit(userId: string, actionName: string) {
-  // Use a composite key for ratelimiting per user per action
   const { success } = await ratelimit.limit(`rl:${actionName}:${userId}`);
   if (!success) {
     throw new Error("Rate limit exceeded. Please try again later.");
   }
-}
-
-async function generateTextWithFallback(options: any) {
-  let lastError;
-  for (const model of models) {
-    try {
-      return await generateText({ ...options, model });
-    } catch (e) {
-      console.warn(`Model failed, falling back to next provider. Error:`, e);
-      lastError = e;
-    }
-  }
-  throw lastError;
 }
 
 export async function syncEmailsAction() {
@@ -80,9 +53,120 @@ export async function syncEmailsAction() {
     const user = await requireAuth();
     await checkRateLimit(user.id, "syncEmails");
     
-    const result = await processEmails();
+    const result = await processEmails(user.id);
+    
+    await prisma.appConfig.update({
+      where: { userId: user.id },
+      data: { lastEmailSync: new Date() }
+    });
+    
     revalidatePath("/");
     return result;
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
+}
+
+export async function syncLinkedInAction() {
+  try {
+    const user = await requireAuth();
+    await checkRateLimit(user.id, "syncLinkedIn");
+    
+    const result = await processLinkedInMessages(user.id);
+    
+    await prisma.appConfig.update({
+      where: { userId: user.id },
+      data: { lastLinkedInSync: new Date() }
+    });
+    
+    revalidatePath("/");
+    return result;
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
+}
+
+import { createLinkedInMcpClient } from "@/lib/linkedin-mcp-client";
+
+export async function connectLinkedInAction() {
+  try {
+    const user = await requireAuth();
+    await checkRateLimit(user.id, "connectLinkedIn");
+    
+    const { client, transport } = await createLinkedInMcpClient();
+    
+    try {
+      await Promise.race([
+        client.callTool({ name: "get_my_profile", arguments: {} }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout waiting for login")), 45000))
+      ]);
+      
+      await prisma.appConfig.upsert({
+        where: { userId: user.id },
+        update: { linkedInConnected: true },
+        create: { userId: user.id, linkedInConnected: true }
+      });
+      revalidatePath("/");
+      revalidatePath("/settings");
+      return { success: true, verified: true };
+    } catch (err: any) {
+      if (err.message === "Timeout waiting for login") {
+         return { success: true, verified: false, message: "Login window opened. Please complete login in the popup." };
+      }
+      throw err;
+    } finally {
+      try {
+        await transport.close();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+  } catch (e: any) {
+    console.error("LinkedIn Connect Error:", e);
+    return { success: false, message: e.message };
+  }
+}
+
+export async function verifyLinkedInConnectionAction() {
+  try {
+    const user = await requireAuth();
+    await checkRateLimit(user.id, "verifyLinkedIn");
+    
+    const { client, transport } = await createLinkedInMcpClient();
+    try {
+      const result = await client.callTool({ name: "get_my_profile", arguments: {} });
+      
+      await prisma.appConfig.upsert({
+        where: { userId: user.id },
+        update: { linkedInConnected: true },
+        create: { userId: user.id, linkedInConnected: true }
+      });
+      
+      revalidatePath("/");
+      revalidatePath("/settings");
+      return { success: true, profile: (result.content as any[])[0]?.text };
+    } finally {
+      try { await transport.close(); } catch (e) { console.error(e); }
+    }
+  } catch (e: any) {
+    return { success: false, message: "Verification failed. You might need to reconnect." };
+  }
+}
+
+export async function disconnectLinkedInAction() {
+  try {
+    const user = await requireAuth();
+    await checkRateLimit(user.id, "disconnectLinkedIn");
+    
+    await prisma.appConfig.update({
+      where: { userId: user.id },
+      data: { linkedInConnected: false }
+    });
+    
+    revalidatePath("/");
+    revalidatePath("/settings");
+    return { success: true };
   } catch (e: any) {
     return { success: false, message: e.message };
   }
@@ -93,7 +177,20 @@ export async function reProcessEmailsAction() {
     const user = await requireAuth();
     await checkRateLimit(user.id, "reProcessEmails");
     
-    const result = await reProcessAllEmails();
+    const result = await reProcessAllEmails(user.id);
+    revalidatePath("/");
+    return result;
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
+}
+
+export async function reProcessLinkedInAction() {
+  try {
+    const user = await requireAuth();
+    await checkRateLimit(user.id, "reProcessLinkedIn");
+    
+    const result = await reProcessAllLinkedInMessages(user.id);
     revalidatePath("/");
     return result;
   } catch (e: any) {
@@ -103,11 +200,11 @@ export async function reProcessEmailsAction() {
 
 export async function addCategoryAction(name: string) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const validated = categorySchema.parse({ name: name.trim() });
     
     await prisma.category.create({
-      data: { name: validated.name }
+      data: { name: validated.name, userId: user.id }
     });
     revalidatePath("/");
     return { success: true };
@@ -119,11 +216,11 @@ export async function addCategoryAction(name: string) {
 
 export async function addRuleAction(title: string, content: string) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const validated = ruleSchema.parse({ title: title.trim(), content: content.trim() });
     
     await prisma.rule.create({
-      data: { title: validated.title, content: validated.content }
+      data: { title: validated.title, content: validated.content, userId: user.id }
     });
     revalidatePath("/knowledge");
     return { success: true };
@@ -160,19 +257,22 @@ export async function deleteKnowledgeAction(id: string) {
 
 export async function addBulkKnowledgeAction(content: string) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
     const validated = bulkKnowledgeSchema.parse({ content: content.trim() });
     
-    // Split text into paragraphs (chunks)
     const chunks = validated.content.split(/\n\s*\n/).map(c => c.trim()).filter(c => c.length > 20);
     
     for (let i = 0; i < chunks.length; i++) {
       const chunkText = chunks[i];
       const embeddingArray = await generateEmbedding(chunkText);
+      const firstLine = chunkText.trim().split('\n')[0];
+      const cleanTitle = firstLine.split(/\s+/).slice(0, 6).join(" ") + (firstLine.split(/\s+/).length > 6 ? "..." : "");
+
       await prisma.knowledge.create({
         data: {
-          title: `Bulk Snippet #${Date.now()}-${i}`,
+          title: cleanTitle,
           content: chunkText,
+          userId: user.id,
           embedding: JSON.stringify(embeddingArray)
         }
       });
@@ -187,8 +287,7 @@ export async function addBulkKnowledgeAction(content: string) {
 
 export async function loadDemoInboxAction() {
   try {
-    await requireAuth();
-    // This action doesn't hit external APIs for LLMs, but we can rate limit it just in case.
+    const user = await requireAuth();
     
     const demoEmails = [
       { providerMessageId: "demo-1", subject: "Invoice #1042 Overdue", senderName: "Acme Corp Billing", senderEmail: "billing@acmecorp.com", category: "Important", priority: 5, replyNeeded: false, summary: "Your invoice for $4,200 is 3 days overdue.", confidenceScore: 98, draftReply: null },
@@ -203,16 +302,20 @@ export async function loadDemoInboxAction() {
       { providerMessageId: "demo-10", subject: "Interview next steps?", senderName: "Alex Candidate", senderEmail: "alex@gmail.com", category: "Needs Reply", priority: 4, replyNeeded: true, summary: "Alex is following up on his engineering interview from Monday.", confidenceScore: 94, draftReply: "Alex, we'd love to move forward. I'll send an offer letter shortly." },
     ];
 
-    const defaultCats = ["Needs Reply", "Important", "Newsletters", "Notifications", "Promotions", "Ignore", "Sensitive"];
+    const defaultCats = DEFAULT_EMAIL_CATEGORIES;
     for (const cat of defaultCats) {
-      await prisma.category.upsert({ where: { name: cat }, update: {}, create: { name: cat } });
+      await prisma.category.upsert({
+        where: { name_userId: { name: cat, userId: user.id } },
+        update: {},
+        create: { name: cat, userId: user.id }
+      });
     }
 
     for (const email of demoEmails) {
       await prisma.email.upsert({
         where: { providerMessageId: email.providerMessageId },
-        update: email,
-        create: email
+        update: { ...email, userId: user.id },
+        create: { ...email, userId: user.id }
       });
     }
     revalidatePath("/");
@@ -227,20 +330,18 @@ export async function generateDailyBriefingAction() {
     const user = await requireAuth();
     await checkRateLimit(user.id, "generateDailyBriefing");
     
-    // Fetch recent emails
     const emails = await prisma.email.findMany({
       orderBy: { time: 'desc' },
-      take: 50 // process up to the 50 most recent
+      take: 50
     });
 
     if (emails.length === 0) {
       return { success: false, message: "No emails to summarize." };
     }
 
-    // Prepare text for AI
     const summaryText = emails.map(e => `[${e.category}] From: ${e.senderName} - Subject: ${e.subject}\nSummary: ${e.summary}`).join("\n\n");
 
-    const { text } = await generateTextWithFallback({
+    const { text } = await generateTextWithLocalFallback({
       prompt: `You are an AI assistant for a busy startup founder. Write a "Daily AI Inbox Briefing".
 Here are the recent emails categorized in the inbox:
 
@@ -269,7 +370,6 @@ export async function reCategorizeEmailAction(emailId: string, newCategory: stri
       data: { category: validated.newCategory }
     });
 
-    // Auto-learning: create a rule for this sender
     const ruleTitle = `Auto-Rule: Sender ${email.senderEmail}`;
     const ruleContent = `Force sender ${email.senderEmail} to be categorized as "${validated.newCategory}". Do NOT put this sender in any other category.`;
     
@@ -284,5 +384,112 @@ export async function reCategorizeEmailAction(emailId: string, newCategory: stri
     return { success: true };
   } catch (e: any) {
     return { success: false, message: e.errors ? e.errors[0].message : e.message };
+  }
+}
+
+export async function updateDraftAction(id: string, newDraft: string, type: "email" | "linkedin") {
+  try {
+    await requireAuth();
+    
+    if (type === "email") {
+      await prisma.email.update({
+        where: { id },
+        data: { draftReply: newDraft }
+      });
+    } else {
+      await prisma.linkedInMessage.update({
+        where: { id },
+        data: { draftReply: newDraft }
+      });
+    }
+    
+    revalidatePath("/");
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, message: e.errors ? e.errors[0].message : e.message };
+  }
+}
+
+export async function getKnowledgeDataAction() {
+  const user = await requireAuth();
+  const rulesData = await prisma.rule.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
+  const knowledgeData = await prisma.knowledge.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
+  return { rulesData, knowledgeData };
+}
+
+export async function sendLinkedInMessageAction(id: string, linkedinUsername: string, message: string) {
+  try {
+    await requireAuth();
+
+    let conn;
+    try {
+      conn = await createLinkedInMcpClient();
+    } catch (e) {
+      console.error("Failed to connect to LinkedIn MCP:", e);
+      return { success: false, message: "Failed to connect to LinkedIn background service." };
+    }
+
+    const mcp = conn.client;
+    
+    // Send the message
+    const sendResponse = await mcp.callTool({
+      name: "send_message",
+      arguments: {
+        linkedin_username: linkedinUsername,
+        message: message,
+        confirm_send: true
+      }
+    });
+
+    console.log("MCP send_message response:", JSON.stringify(sendResponse, null, 2));
+
+    conn.transport.close();
+
+    if (sendResponse.isError) {
+      const errorText = (sendResponse.content as any[])?.find((c: any) => c.type === 'text')?.text || "Unknown MCP Error";
+      return { success: false, message: errorText };
+    }
+
+    const responseText = (sendResponse.content as any[])?.find((c: any) => c.type === 'text')?.text || "";
+    
+    // Try parsing as JSON first
+    try {
+      const parsed = JSON.parse(responseText);
+      if (parsed.sent === false || parsed.status === "message_unavailable") {
+        return { success: false, message: parsed.message || "Could not send message to this profile." };
+      }
+    } catch (err) {
+      // Not JSON, fallback to keyword checks
+      if (responseText.toLowerCase().includes("error") || responseText.toLowerCase().includes("failed")) {
+        return { success: false, message: responseText };
+      }
+    }
+
+    // Mark as replied/archived
+    await prisma.linkedInMessage.update({
+      where: { id },
+      data: { replyNeeded: false }
+    });
+    
+    revalidatePath("/");
+    return { success: true };
+  } catch (e: any) {
+    console.error("Failed to send LinkedIn message:", e);
+    return { success: false, message: e.message || "An error occurred while sending the message." };
+  }
+}
+
+export async function updateCategoryAction(id: string, newCategory: string, type: "email" | "linkedin") {
+  try {
+    await requireAuth();
+    if (type === "email") {
+      await prisma.email.update({ where: { id }, data: { category: newCategory } });
+    } else {
+      await prisma.linkedInMessage.update({ where: { id }, data: { category: newCategory } });
+    }
+    revalidatePath("/");
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, message: e.message };
   }
 }

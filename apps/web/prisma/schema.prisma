@@ -1,5 +1,7 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+// NOTE: Despite the provider = "sqlite" below, this project actually uses Supabase Postgres.
+// The DATABASE_URL env var points to a PostgreSQL connection string.
 
 generator client {
   provider = "prisma-client-js"
@@ -19,19 +21,28 @@ model Email {
   providerCategory  String?  // e.g. "PROMOTIONS", "UPDATES" from Gmail
   category          String   // "Reply Needed", "Important", "Ignore"
   summary           String
+  originalBody      String?
   draftReply        String?
   confidenceScore   Int?
   priority          Int?
   replyNeeded       Boolean?
+  userId            String   @default("default_user")
   time              DateTime @default(now())
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([time])
+  @@index([category])
+  @@index([userId])
 }
 
 model Category {
   id        String   @id @default(cuid())
-  name      String   @unique
+  name      String
+  userId    String   @default("default_user")
   createdAt DateTime @default(now())
+
+  @@unique([name, userId])
 }
 
 model Knowledge {
@@ -39,20 +50,54 @@ model Knowledge {
   title     String
   content   String
   embedding String?
+  source    String   @default("MANUAL") // MANUAL or LINKEDIN_MEMORY
+  userId    String   @default("default_user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Rule {
   id        String   @id @default(cuid())
   title     String
   content   String
+  userId    String   @default("default_user")
   createdAt DateTime @default(now())
+
+  @@index([userId])
 }
 
 model AppConfig {
-  id               String   @id @default("default")
-  imapEmail        String?
-  imapPassword     String?
-  updatedAt        DateTime @updatedAt
+  userId                   String    @id @default("default_user")
+  imapEmail                String?
+  imapPassword             String?
+  linkedInConnected        Boolean   @default(false)
+  linkedInName             String?
+  autoSyncEmail            Boolean   @default(true)
+  autoSyncLinkedIn         Boolean   @default(true)
+  autoSyncIntervalEmail    Int       @default(30)
+  autoSyncIntervalLinkedIn Int       @default(60)
+  lastEmailSync            DateTime?
+  lastLinkedInSync         DateTime?
+  updatedAt                DateTime  @updatedAt
+}
+
+model LinkedInMessage {
+  id                String   @id @default(cuid())
+  providerMessageId String   @unique
+  senderName        String
+  senderProfileUrl  String?
+  category          String   // "Reply Needed", "Important", "Ignore"
+  summary           String
+  originalBody      String?
+  draftReply        String?
+  replyNeeded       Boolean?
+  userId            String   @default("default_user")
+  time              DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([time])
+  @@index([userId])
 }
