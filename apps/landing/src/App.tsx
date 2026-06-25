@@ -1,4 +1,3 @@
-"use client";
 import { useState, useEffect } from 'react'
 import { motion, useScroll, useTransform, type Variants } from 'framer-motion'
 import {
@@ -1005,4 +1004,3 @@ function App() {
 }
 
 export default App
-

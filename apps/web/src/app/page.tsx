@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { prisma } from "@/lib/prisma";
 import { Dashboard } from "@/components/dashboard";
-import LandingPage from "@/components/landing-page";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_EMAIL_CATEGORIES, DEFAULT_LINKEDIN_CATEGORIES } from "@/lib/constants";
 
@@ -11,7 +10,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ [
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return <LandingPage />;
+    redirect('/login');
   }
 
   const resolvedParams = await searchParams;
