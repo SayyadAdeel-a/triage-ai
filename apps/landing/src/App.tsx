@@ -107,7 +107,7 @@ function Navbar() {
                         href="#"
                         className="text-[#eeeded] font-semibold tracking-[0.12em] text-sm uppercase hover:text-white transition-colors"
                     >
-                        Merydian
+                        TriageAI
                     </a>
 
                     <div className="hidden md:flex items-center gap-8">
@@ -127,7 +127,7 @@ function Navbar() {
                             href="#cta"
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-colors duration-200 btn-primary-shadow"
                         >
-                            Book Discovery Call
+                            Start for free
                             <ArrowRight size={14} strokeWidth={2.5} />
                         </a>
                     </div>
@@ -166,7 +166,7 @@ function Navbar() {
                             onClick={() => setMobileOpen(false)}
                             className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold mt-2"
                         >
-                            Book Discovery Call
+                            Start for free
                             <ArrowRight size={14} strokeWidth={2.5} />
                         </a>
                     </div>
@@ -384,20 +384,20 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
 function FAQ() {
     const items = [
         {
-            q: 'How long does deployment typically take?',
-            a: 'Most teams are operational within 2-3 weeks. Complex enterprise environments with custom compliance requirements may take 4-6 weeks.'
+            q: 'How does TriageAI protect my data?',
+            a: 'TriageAI processes emails locally and uses secure API connections to LLMs. You own your data and it never touches our servers.'
         },
         {
-            q: 'Do you store any of our data?',
-            a: 'No. Merydian runs entirely inside your infrastructure. We never access your prompts, model weights, or operational data.'
+            q: 'Does it work with my existing email provider?',
+            a: 'Yes, TriageAI connects to any email provider using standard IMAP/SMTP, including Gmail, Outlook, and custom domains.'
         },
         {
-            q: 'What models and frameworks are supported?',
-            a: 'We support OpenClaw, LangChain, LlamaIndex, and any OpenAI-compatible API. New integrations ship monthly.'
+            q: 'Can it reply to emails automatically?',
+            a: 'You can configure Autopilot mode to either pre-draft replies for your review or automatically send them based on strict confidence thresholds you define.'
         },
         {
-            q: 'Is there really no subscription?',
-            a: 'Correct. You purchase a deployment license once. Support renewals are optional and priced separately.'
+            q: 'Do you charge a monthly subscription?',
+            a: 'No. You purchase a lifetime license for the desktop app. You just pay your own API costs directly to the AI provider (usually pennies a day).'
         }
     ]
 
@@ -493,7 +493,7 @@ function Hero() {
                 >
                     <motion.div variants={fadeUp}>
                         <span className="inline-block text-xs font-medium tracking-[0.2em] uppercase text-[#00ffab]/80 mb-6">
-                            Enterprise AI Infrastructure
+                            The Ultimate AI Assistant
                         </span>
                     </motion.div>
 
@@ -501,17 +501,14 @@ function Hero() {
                         variants={fadeUp}
                         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.05] mb-6"
                     >
-                        Secure AI Infrastructure.
-                        <br />
-                        <span className="gradient-text">Owned by You.</span>
+                        Take back control.<br /><span className="gradient-text">Your AI executive assistant.</span>
                     </motion.h1>
 
                     <motion.p
                         variants={fadeUp}
                         className="max-w-2xl mx-auto text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10"
                     >
-                        Enterprise-grade AI operations deployed in your environment. Save 10-20 hours
-                        per week without exposing your data.
+                        TriageAI automatically categorizes emails, drafts contextual replies, and learns from your behavior to save you hours every week.
                     </motion.p>
 
                     <motion.div
@@ -522,7 +519,7 @@ function Hero() {
                             href="#cta"
                             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
                         >
-                            Book Discovery Call
+                            Start for free
                             <ArrowRight size={16} strokeWidth={2.5} />
                         </a>
                         <a
@@ -551,7 +548,7 @@ function Hero() {
                                     <Zap size={14} fill="currentColor" />
                                 </div>
                                 <span className="text-xs font-semibold tracking-[0.15em] uppercase">
-                                    Watch the Breakdown
+                                    View Demo
                                 </span>
                             </div>
                         </div>
@@ -588,8 +585,7 @@ function IntroStatement() {
                         variants={fadeUp}
                         className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-8"
                     >
-                        OpenClaw is the most powerful AI agent on the planet. 247,000+ stars. 900+
-                        contributors. Every business should run it. Almost none can deploy it safely.
+                        Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow.
                     </motion.h2>
 
                     <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -597,7 +593,7 @@ function IntroStatement() {
                             href="#cta"
                             className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
                         >
-                            Book Discovery Call
+                            Start for free
                             <ArrowRight size={16} strokeWidth={2.5} />
                         </a>
                         <a
@@ -616,7 +612,7 @@ function IntroStatement() {
 
 function ProblemSection() {
     return (
-        <section id="security" className="py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a]">
+        <section id="features" className="py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a]">
             <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial="hidden"
@@ -626,17 +622,11 @@ function ProblemSection() {
                     className="text-center max-w-3xl mx-auto mb-16"
                 >
                     <motion.div variants={fadeUp}>
-                        <SectionLabel>The Problem</SectionLabel>
+                        <SectionLabel>Core Features</SectionLabel>
                     </motion.div>
                     <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                        Powerful to deploy.
-                        <br />
-                        <span className="text-[#eeeded]/60">Dangerous to deploy wrong.</span>
+                        Your inbox, <span className="text-[#00ffab]">fully automated.</span>
                     </motion.h2>
-                    <motion.p variants={fadeUp} className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed">
-                        OpenClaw is under attack. Community-built skills are stealing data, injecting code,
-                        and compromising supply chains.
-                    </motion.p>
                 </motion.div>
 
                 <motion.div
@@ -644,35 +634,43 @@ function ProblemSection() {
                     whileInView="visible"
                     viewport={{ once: true, margin: '-50px' }}
                     variants={staggerContainer}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
                 >
                     <FeatureCard
-                        icon={<AlertTriangle size={20} />}
-                        title="Malicious Skills"
-                        description="341 dangerous skills identified on ClawHub stealing user data."
-                        visual={<ThreatVisual type="skills" />}
+                        icon={<Database size={20} />}
+                        title="Smart Categorization"
+                        description="Instantly routes incoming emails into actionable, high-priority folders."
                         delay={0}
                     />
                     <FeatureCard
-                        icon={<Database size={20} />}
-                        title="Data Extraction"
-                        description="Credential theft with 47 incidents documented this quarter."
-                        visual={<ThreatVisual type="data" />}
+                        icon={<Code2 size={20} />}
+                        title="Autonomous Drafting"
+                        description="Pre-writes highly accurate replies based on your past email history."
                         delay={0.1}
                     />
                     <FeatureCard
-                        icon={<Code2 size={20} />}
-                        title="Code Injection"
-                        description="Remote execution with 128 unauthorized injections detected."
-                        visual={<ThreatVisual type="code" />}
+                        icon={<Package size={20} />}
+                        title="Custom Knowledge Base"
+                        description="Upload documents to train the AI on how to answer specific business questions."
                         delay={0.2}
                     />
                     <FeatureCard
-                        icon={<Package size={20} />}
-                        title="Supply Chain"
-                        description="Compromised dependencies with 166 malicious packages found."
-                        visual={<ThreatVisual type="supply" />}
+                        icon={<Zap size={20} />}
+                        title="Autopilot Mode"
+                        description="Runs 24/7 in the background so you wake up to a perfectly clean inbox."
                         delay={0.3}
+                    />
+                    <FeatureCard
+                        icon={<AlertTriangle size={20} />}
+                        title="Bulk Actions"
+                        description="Archive or delete entire categories of useless emails with a single click."
+                        delay={0.4}
+                    />
+                    <FeatureCard
+                        icon={<Check size={20} />}
+                        title="Local Processing"
+                        description="Uses local models and secure APIs to keep your private data entirely on your machine."
+                        delay={0.5}
                     />
                 </motion.div>
             </div>
@@ -879,12 +877,10 @@ function CTASection() {
                     <div className="relative z-10">
                         <SectionLabel>Get Started</SectionLabel>
                         <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                            Ready to deploy
-                            <br />
-                            <span className="gradient-text">secure AI infrastructure?</span>
+                            Ready to take back control of your inbox?
                         </h2>
                         <p className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10 max-w-xl mx-auto">
-                            Book a discovery call and get started in weeks, not months.
+                            Join thousands of executives saving 10+ hours a week.
                         </p>
 
                         <form
@@ -910,7 +906,7 @@ function CTASection() {
                                 type="submit"
                                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
                             >
-                                Book Discovery Call
+                                Start for free
                                 <ArrowRight size={16} strokeWidth={2.5} />
                             </button>
                         </form>
@@ -937,7 +933,7 @@ function Footer() {
                             href="#"
                             className="text-xl font-bold tracking-[0.12em] uppercase text-[#0a0a0a]"
                         >
-                            Merydian
+                            TriageAI
                         </a>
                         <p className="mt-4 text-sm text-[#0a0a0a]/70 max-w-xs leading-relaxed">
                             Secure, self-hosted AI infrastructure for teams that refuse to compromise on control.
@@ -969,7 +965,7 @@ function Footer() {
 
                 <div className="mt-14 pt-8 border-t border-[#0a0a0a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="text-xs text-[#0a0a0a]/60">
-                        © 2024 Merydian. All rights reserved.
+                        © 2024 TriageAI. All rights reserved.
                     </p>
                     <div className="flex items-center gap-2 text-xs text-[#0a0a0a]/60">
                         <span>Made with</span>
@@ -1004,3 +1000,4 @@ function App() {
 }
 
 export default App
+
