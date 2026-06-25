@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { EmailData } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Inbox, Star, User, Clock, ArrowRight, Zap, Play, Settings2, Brain, Tag, FileText, Bell, ShoppingBag, Briefcase, Mail, AlertCircle, Send, Users, Edit2, Copy, Check, Sparkles, MessageSquare } from "lucide-react";
-import { connectLinkedInAction, updateDraftAction, sendLinkedInMessageAction, updateCategoryAction } from "@/app/actions";
+import { Inbox, Star, User, Clock, ArrowRight, Zap, Play, Settings2, Brain, Tag, FileText, Bell, ShoppingBag, Briefcase, Mail, AlertCircle, Send, Users, Edit2, Copy, Check, Sparkles, MessageSquare, Save, Archive, Search, Trash2, X } from "lucide-react";
+import { connectLinkedInAction, updateDraftAction, sendLinkedInMessageAction, updateCategoryAction, sendEmailReplyAction, saveDraftToGmailAction, markEmailReadAction, archiveEmailAction, searchEmailsAction, deleteEmailAction, listLabelsAction, addLabelAction, removeLabelAction, bulkArchiveAction } from "@/app/actions";
 import { Loader2 } from "lucide-react";
 import { SyncButton } from "@/app/sync-button";
 import { SyncLinkedInButton } from "@/app/sync-linkedin-button";
@@ -120,6 +120,58 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
   const [isSending, setIsSending] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showTooltip, setShowTooltip] = useState(emails.length > 0 && true);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<EmailData[]>([]);
+  const [watcherStatus, setWatcherStatus] = useState<"connecting" | "active" | "error">("connecting");
+  const [availableLabels, setAvailableLabels] = useState<string[]>([]);
+  const [isLabeling, setIsLabeling] = useState(false);
+  const [isBulkArchiving, setIsBulkArchiving] = useState(false);
+
+  // Fetch labels
+  useEffect(() => {
+    if (inboxType === "email" && userEmail) {
+      listLabelsAction().then(res => {
+        if (res.success && res.labels) setAvailableLabels(res.labels);
+      });
+    }
+  }, [inboxType, userEmail]);
+
+  // Debounced search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      const res = await searchEmailsAction(searchQuery);
+      if (res.success && res.emails) {
+        setSearchResults(res.emails);
+      }
+      setIsSearching(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Start watcher on mount if inboxType is email
+  useEffect(() => {
+    if (inboxType === "email" && userEmail) {
+      fetch("/api/watcher/start", { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "Watcher started" || data.status === "Watcher already running") {
+            setWatcherStatus("active");
+          } else {
+            setWatcherStatus("error");
+          }
+        })
+        .catch(() => setWatcherStatus("error"));
+    }
+  }, [inboxType, userEmail]);
 
   const groupedEmails = emails.reduce((acc, email) => {
     const cat = email.category || "Uncategorized";
@@ -128,7 +180,7 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
     return acc;
   }, {} as Record<string, typeof emails>);
 
-  const activeEmails = groupedEmails[activeTab] || [];
+  const activeEmails = searchQuery ? searchResults : (groupedEmails[activeTab] || []);
   const selectedEmail = emails.find(e => e.id === selectedEmailId);
 
   const handleConnectLinkedIn = async () => {
@@ -152,19 +204,34 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
     if (!selectedEmail?.draftReply) return;
 
     if (inboxType === "email") {
-      const subject = selectedEmail.subject.startsWith("Re:")
-        ? selectedEmail.subject
-        : `Re: ${selectedEmail.subject}`;
-      const to = selectedEmail.senderEmail;
-      const body = encodeURIComponent(selectedEmail.draftReply);
+      setIsSending(true);
       
-      const authUserPath = userEmail ? `/u/${userEmail}` : "";
-      const gmailUrl = `https://mail.google.com/mail${authUserPath}/?view=cm&fs=1&to=${to}&su=${encodeURIComponent(subject)}&body=${body}`;
+      const res = await sendEmailReplyAction(selectedEmail.id, selectedEmail.draftReply);
+      setIsSending(false);
       
-      if (typeof window !== "undefined" && (window as any).electronAPI?.openExternal) {
-        (window as any).electronAPI.openExternal(gmailUrl);
+      if (res.success) {
+        setSelectedEmailId(null);
       } else {
-        window.open(gmailUrl, "_blank", "noopener,noreferrer,width=1000,height=800");
+        console.warn("MCP Send Failed, falling back to manual:", res.message);
+        if (selectedEmail.draftReply) {
+          navigator.clipboard.writeText(selectedEmail.draftReply);
+        }
+        
+        const subject = selectedEmail.subject.startsWith("Re:")
+          ? selectedEmail.subject
+          : `Re: ${selectedEmail.subject}`;
+        const to = selectedEmail.senderEmail;
+        const body = encodeURIComponent(selectedEmail.draftReply);
+        
+        const authUserPath = userEmail ? `/u/${userEmail}` : "";
+        const gmailUrl = `https://mail.google.com/mail${authUserPath}/?view=cm&fs=1&to=${to}&su=${encodeURIComponent(subject)}&body=${body}`;
+        
+        if (typeof window !== "undefined" && (window as any).electronAPI?.openExternal) {
+          (window as any).electronAPI.openExternal(gmailUrl);
+        } else {
+          window.open(gmailUrl, "_blank", "noopener,noreferrer,width=1000,height=800");
+        }
+        alert("Automated sending failed: " + res.message + "\n\nOpened Gmail directly. Please paste your message and send manually.");
       }
       
     } else if (inboxType === "linkedin") {
@@ -195,6 +262,101 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
         alert("Automated sending failed: " + res.message + "\n\nOpened LinkedIn directly. Please paste your message and send manually.");
       }
     }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!selectedEmail?.draftReply || inboxType !== "email") return;
+    
+    setIsSavingDraft(true);
+    const res = await saveDraftToGmailAction(selectedEmail.id, selectedEmail.draftReply);
+    setIsSavingDraft(false);
+    
+    if (res.success) {
+      alert("Draft saved to Gmail successfully!");
+    } else {
+      alert("Failed to save draft: " + res.message);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!selectedEmail?.providerMessageId || inboxType !== "email") return;
+    
+    setIsArchiving(true);
+    const res = await archiveEmailAction(selectedEmail.id, selectedEmail.providerMessageId);
+    setIsArchiving(false);
+    
+    if (res.success) {
+      setSelectedEmailId(null);
+      if (searchQuery) {
+        setSearchResults(prev => prev.filter(e => e.id !== selectedEmail.id));
+      }
+    } else {
+      alert("Failed to archive email: " + res.message);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedEmail?.providerMessageId || inboxType !== "email") return;
+    if (!window.confirm("Are you sure you want to move this email to Trash?")) return;
+    
+    setIsDeleting(true);
+    const res = await deleteEmailAction(selectedEmail.id, selectedEmail.providerMessageId);
+    setIsDeleting(false);
+    
+    if (res.success) {
+      setSelectedEmailId(null);
+      if (searchQuery) {
+        setSearchResults(prev => prev.filter(e => e.id !== selectedEmail.id));
+      }
+    } else {
+      alert("Failed to delete email: " + res.message);
+    }
+  };
+
+  const handleAddLabel = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const label = e.target.value;
+    if (!label || !selectedEmail?.providerMessageId) return;
+    setIsLabeling(true);
+    const res = await addLabelAction(selectedEmail.id, selectedEmail.providerMessageId, label);
+    if (res.success) {
+      selectedEmail.labels = selectedEmail.labels ? `${selectedEmail.labels},${label}` : label;
+    } else {
+      alert("Failed to add label: " + res.message);
+    }
+    setIsLabeling(false);
+    e.target.value = "";
+  };
+
+  const handleRemoveLabel = async (label: string) => {
+    if (!selectedEmail?.providerMessageId) return;
+    setIsLabeling(true);
+    const res = await removeLabelAction(selectedEmail.id, selectedEmail.providerMessageId, label);
+    if (res.success) {
+      const current = selectedEmail.labels ? selectedEmail.labels.split(",").filter(l => l.trim()) : [];
+      selectedEmail.labels = current.filter(l => l !== label).join(",");
+    } else {
+      alert("Failed to remove label: " + res.message);
+    }
+    setIsLabeling(false);
+  };
+
+  const handleBulkArchive = async (category: string) => {
+    const categoryEmails = emails.filter(e => (e.category || "Uncategorized") === category);
+    if (categoryEmails.length === 0) return;
+    
+    if (!window.confirm(`Are you sure you want to archive all ${categoryEmails.length} emails in "${category}"?`)) return;
+
+    setIsBulkArchiving(true);
+    const emailIds = categoryEmails.map(e => e.id);
+    const providerIds = categoryEmails.map(e => e.providerMessageId).filter(Boolean) as string[];
+
+    const res = await bulkArchiveAction(emailIds, providerIds);
+    if (res.success) {
+      if (activeTab === category) setSelectedEmailId(null);
+    } else {
+      alert("Failed to bulk archive: " + res.message);
+    }
+    setIsBulkArchiving(false);
   };
 
   if (inboxType === "linkedin" && !linkedInConnected) {
@@ -239,7 +401,7 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
                     setActiveTab(cat);
                     setSelectedEmailId(null);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-300 border ${isActive
+                  className={`w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-semibold tracking-wide transition-all duration-300 border group ${isActive
                       ? "bg-primary/10 text-primary border-primary/25 shadow-glow scale-[1.02]"
                       : "text-muted-foreground hover:bg-white/5 hover:text-foreground border-transparent"
                     }`}
@@ -248,10 +410,21 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
                     {getCategoryIcon(cat)}
                     <span className="truncate max-w-[125px] text-left">{cat}</span>
                   </div>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition-all ${isActive ? "bg-primary/20 text-primary" : "bg-white/10 text-foreground/80"
-                    }`}>
-                    {groupedEmails[cat]?.length || 0}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {groupedEmails[cat]?.length > 0 && inboxType === "email" && (
+                       <div 
+                         onClick={(e) => { e.stopPropagation(); handleBulkArchive(cat); }}
+                         className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white/10 rounded-md transition-all text-muted-foreground hover:text-white"
+                         title={`Archive all in ${cat}`}
+                       >
+                         {isBulkArchiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                       </div>
+                    )}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold transition-all ${isActive ? "bg-primary/20 text-primary" : "bg-white/10 text-foreground/80"
+                      }`}>
+                      {groupedEmails[cat]?.length || 0}
+                    </span>
+                  </div>
                 </button>
               );
             })}
@@ -271,16 +444,37 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
               {inboxType === "linkedin" ? (
                 <SyncLinkedInButton inline />
               ) : userEmail ? (
-                <SyncButton inline />
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <div className={`w-2 h-2 rounded-full ${watcherStatus === 'active' ? 'bg-primary animate-pulse shadow-glow' : watcherStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`} />
+                  <span className="text-xs font-bold text-primary">{watcherStatus === 'active' ? 'Live Sync' : watcherStatus === 'connecting' ? 'Connecting...' : 'Sync Error'}</span>
+                </div>
               ) : null}
             </div>
-            <span className="text-[9px] text-muted-foreground mr-1">
-              Synced: {(inboxType === "linkedin" ? lastLinkedInSync : lastEmailSync) 
-                ? new Date(inboxType === "linkedin" ? lastLinkedInSync! : lastEmailSync!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                : "Never"}
-            </span>
+            {inboxType === "linkedin" && (
+              <span className="text-[9px] text-muted-foreground mr-1">
+                Synced: {lastLinkedInSync ? new Date(lastLinkedInSync).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Never"}
+              </span>
+            )}
           </div>
         </div>
+
+        {inboxType === "email" && (
+          <div className="p-3 border-b border-white/5">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search IMAP..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all"
+              />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-primary animate-spin" />
+              )}
+            </div>
+          </div>
+        )}
 
         <ScrollArea className="flex-1">
           <div className="p-3 space-y-2">
@@ -307,9 +501,14 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
                 </div>
                 <p className="text-sm font-bold text-white mb-2">Inbox Connected!</p>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                  Ready to analyze your inbox. Click below to start sync.
+                  {inboxType === "linkedin" ? "Ready to analyze your inbox. Click below to start sync." : "Watcher active. Waiting for new emails..."}
                 </p>
-                {inboxType === "linkedin" ? <SyncLinkedInButton /> : <SyncButton />}
+                {inboxType === "linkedin" ? <SyncLinkedInButton /> : (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                    <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-glow" />
+                    <span className="text-sm font-bold text-primary">Live Sync Active</span>
+                  </div>
+                )}
               </div>
             ) : activeEmails.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground/60 p-6 text-center animate-in fade-in duration-500">
@@ -323,11 +522,17 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
               activeEmails.map((email) => (
                 <button
                   key={email.id}
-                  onClick={() => setSelectedEmailId(email.id)}
+                  onClick={() => {
+                    setSelectedEmailId(email.id);
+                    if (inboxType === "email" && !email.isRead && email.providerMessageId) {
+                      markEmailReadAction(email.providerMessageId);
+                      email.isRead = true;
+                    }
+                  }}
                   className={`w-full text-left p-5 transition-all duration-300 relative group flex gap-4 border border-white/5 rounded-2xl ${
                     selectedEmailId === email.id
                       ? 'bg-primary/10 border-primary/30 shadow-glow scale-[0.98]'
-                      : 'hover:bg-white/5 bg-black/20 border-white/5'
+                      : (email.isRead === false ? 'bg-white/5 border-white/10 font-bold' : 'hover:bg-white/5 bg-black/20 border-white/5')
                   }`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary font-bold text-md border border-primary/20">
@@ -386,7 +591,30 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
                         </option>
                       ))}
                     </select>
+
+                    {inboxType === "email" && (
+                      <select
+                        onChange={handleAddLabel}
+                        disabled={isLabeling}
+                        className="bg-white/5 text-foreground border border-white/10 text-xs font-semibold px-3 py-1 rounded-full outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer pr-7 ml-2"
+                        style={{ backgroundImage: "url(\"data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 0.6rem top 50%", backgroundSize: "0.65rem auto" }}
+                      >
+                        <option value="" className="bg-background text-foreground">Add Label...</option>
+                        {availableLabels.filter(l => !(selectedEmail.labels || "").split(",").includes(l)).map(l => (
+                          <option key={l} value={l} className="bg-background text-foreground font-semibold">
+                            {l}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
+                  {(selectedEmail.labels || "").split(",").filter(l => l.trim()).map(label => (
+                    <Badge key={label} variant="outline" className="badge-semantic bg-primary/10 text-primary border-primary/20 flex items-center gap-1 cursor-pointer hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/30" onClick={() => handleRemoveLabel(label)}>
+                      <Tag className="w-3 h-3" />
+                      {label}
+                      <X className="w-3 h-3 opacity-50" />
+                    </Badge>
+                  ))}
                   {selectedEmail.replyNeeded && (
                     <Badge variant="outline" className="badge-semantic bg-blue-500/10 text-blue-400 border-blue-500/20">
                       Needs Reply
@@ -472,11 +700,39 @@ export function Dashboard({ emails, categories, inboxType = "email", linkedInCon
                     <div className="mt-5 flex gap-2 flex-wrap">
                       <button
                         onClick={handleSendReply}
-                        disabled={isSending}
+                        disabled={isSending || isSavingDraft}
                         className="bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-xs font-bold hover:scale-[1.02] transition-all shadow-glow active:scale-[0.98] disabled:opacity-50 flex items-center justify-center min-w-[150px]"
                       >
                         {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : (inboxType === "linkedin" ? "Reply on LinkedIn" : "Send Draft via Gmail")}
                       </button>
+                      {inboxType === "email" && (
+                        <>
+                          <button
+                            onClick={handleSaveDraft}
+                            disabled={isSavingDraft || isSending || isArchiving}
+                            className="bg-transparent border border-white/10 text-foreground px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+                          >
+                            {isSavingDraft ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                            Save to Drafts
+                          </button>
+                          <button
+                            onClick={handleArchive}
+                            disabled={isArchiving || isSending || isSavingDraft}
+                            className="bg-transparent border border-white/10 text-foreground px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 hover:text-red-400 hover:border-red-400/30"
+                          >
+                            {isArchiving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Archive className="w-3.5 h-3.5" />}
+                            Archive
+                          </button>
+                          <button
+                            onClick={handleDelete}
+                            disabled={isDeleting || isArchiving || isSending || isSavingDraft}
+                            className="bg-transparent border border-white/10 text-foreground px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-white/5 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 hover:text-red-500 hover:border-red-500/30"
+                          >
+                            {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            Delete
+                          </button>
+                        </>
+                      )}
                       <button
                         onClick={handleCopy}
                         disabled={isSending}

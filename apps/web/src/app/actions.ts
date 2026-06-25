@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ratelimit } from "@/lib/ratelimit";
 import { generateTextWithLocalFallback } from "@/lib/llm-client";
 import { DEFAULT_EMAIL_CATEGORIES } from "@/lib/constants";
+import { getMcpClient } from "@/lib/mcp-client";
 
 // --- Zod Validation Schemas ---
 const categorySchema = z.object({
@@ -491,5 +492,356 @@ export async function updateCategoryAction(id: string, newCategory: string, type
     return { success: true };
   } catch (e: any) {
     return { success: false, message: e.message };
+  }
+}
+
+export async function sendEmailReplyAction(emailId: string, draftReply: string) {
+  try {
+    const user = await requireAuth();
+    
+    const email = await prisma.email.findUnique({
+      where: { id: emailId, userId: user.id }
+    });
+    
+    if (!email) throw new Error("Email not found");
+    if (!email.providerMessageId) throw new Error("Email provider ID missing");
+    
+    const { client, close } = await getMcpClient(user.id);
+    
+    try {
+      const response = await client.callTool({
+        name: "reply_email",
+        arguments: {
+          account: "default",
+          messageId: email.providerMessageId,
+          body: draftReply
+        }
+      });
+      
+      const responseText = (response.content as any[])?.find((c: any) => c.type === 'text')?.text || "";
+      if (responseText.toLowerCase().includes("error") || responseText.toLowerCase().includes("failed")) {
+         return { success: false, message: responseText };
+      }
+
+      await prisma.email.update({
+        where: { id: emailId },
+        data: { replyNeeded: false }
+      });
+      
+      revalidatePath("/");
+      return { success: true };
+    } finally {
+      close();
+    }
+  } catch (e: any) {
+    console.error("Failed to send email reply:", e);
+    return { success: false, message: e.message || "Failed to send email" };
+  }
+}
+
+export async function saveDraftToGmailAction(emailId: string, draftReply: string) {
+  try {
+    const user = await requireAuth();
+    
+    const email = await prisma.email.findUnique({
+      where: { id: emailId, userId: user.id }
+    });
+    
+    if (!email) throw new Error("Email not found");
+    if (!email.providerMessageId) throw new Error("Email provider ID missing");
+    
+    const { client, close } = await getMcpClient(user.id);
+    
+    try {
+      const response = await client.callTool({
+        name: "save_draft",
+        arguments: {
+          account: "default",
+          inReplyTo: email.providerMessageId,
+          body: draftReply,
+          to: [email.senderEmail],
+          subject: email.subject.startsWith("Re:") ? email.subject : `Re: ${email.subject}`
+        }
+      });
+      
+      const responseText = (response.content as any[])?.find((c: any) => c.type === 'text')?.text || "";
+      if (responseText.toLowerCase().includes("error") || responseText.toLowerCase().includes("failed")) {
+         return { success: false, message: responseText };
+      }
+
+      return { success: true };
+    } finally {
+      close();
+    }
+  } catch (e: any) {
+    console.error("Failed to save draft to Gmail:", e);
+    return { success: false, message: e.message || "Failed to save draft" };
+  }
+}
+
+export async function markEmailReadAction(providerMessageId: string) {
+  try {
+    const user = await requireAuth();
+    const { client, close } = await getMcpClient(user.id);
+    
+    try {
+      await client.callTool({
+        name: "mark_email",
+        arguments: {
+          account: "default",
+          uid: providerMessageId,
+          mailbox: "INBOX",
+          flags: { read: true }
+        }
+      });
+      
+      await prisma.email.updateMany({
+        where: { providerMessageId, userId: user.id },
+        data: { isRead: true }
+      });
+      
+      return { success: true };
+    } finally {
+      close();
+    }
+  } catch (e: any) {
+    console.error("Failed to mark email as read:", e);
+    return { success: false, message: e.message };
+  }
+}
+
+export async function archiveEmailAction(emailId: string, providerMessageId: string) {
+  try {
+    const user = await requireAuth();
+    const { client, close } = await getMcpClient(user.id);
+    
+    try {
+      await client.callTool({
+        name: "move_email",
+        arguments: {
+          account: "default",
+          uid: providerMessageId,
+          from_mailbox: "INBOX",
+          to_mailbox: "[Gmail]/All Mail"
+        }
+      });
+      
+      await prisma.email.delete({
+        where: { id: emailId, userId: user.id }
+      });
+      
+      revalidatePath("/");
+      return { success: true };
+    } finally {
+      close();
+    }
+  } catch (e: any) {
+    console.error("Failed to archive email:", e);
+    return { success: false, message: e.message || "Failed to archive email" };
+  }
+}
+
+export async function searchEmailsAction(query: string) {
+  try {
+    const user = await requireAuth();
+    const { client, close } = await getMcpClient(user.id);
+    
+    try {
+      const response = await client.callTool({
+        name: "search_emails",
+        arguments: {
+          account: "default",
+          query: query,
+          mailbox: "INBOX",
+          limit: 20
+        }
+      });
+      
+      const dataStr = (response.content as any[])?.find((c: any) => c.type === 'text')?.text || "[]";
+      let emails = [];
+      try {
+        emails = JSON.parse(dataStr);
+      } catch (e) {
+        emails = [];
+      }
+      
+      // Format the raw emails into our EmailData type format so UI can render them
+      const formattedEmails = emails.map((m: any) => ({
+        id: "search-" + Math.random().toString(36).substr(2, 9),
+        providerMessageId: m.uid || m.id,
+        subject: m.subject || "No Subject",
+        senderName: m.from || "Unknown",
+        senderEmail: m.from || "",
+        category: "Search Result",
+        summary: m.snippet || "No snippet available",
+        time: m.date ? new Date(m.date).toLocaleDateString() : new Date().toLocaleDateString(),
+        isRead: true
+      }));
+      
+      return { success: true, emails: formattedEmails };
+    } finally {
+      close();
+    }
+  } catch (e: any) {
+    console.error("Failed to search emails:", e);
+    return { success: false, message: e.message || "Failed to search emails" };
+  }
+}
+
+export async function deleteEmailAction(emailId: string, providerMessageId: string) {
+  try {
+    const user = await requireAuth();
+    const { client, close } = await getMcpClient(user.id);
+    
+    try {
+      await client.callTool({
+        name: "delete_email",
+        arguments: {
+          account: "default",
+          uid: providerMessageId,
+          mailbox: "INBOX",
+          trash: true
+        }
+      });
+      
+      await prisma.email.delete({
+        where: { id: emailId }
+      });
+      
+      revalidatePath("/dashboard");
+      return { success: true };
+    } finally {
+      close();
+    }
+  } catch (e: any) {
+    console.error("Failed to delete email:", e);
+    return { success: false, message: e.message || "Failed to delete email" };
+  }
+}
+
+export async function listLabelsAction() {
+  try {
+    const user = await requireAuth();
+    const { client } = await getMcpClient(user.id);
+    const response = await client.callTool({
+      name: "list_labels",
+      arguments: { account: "default" }
+    });
+    
+    const dataStr = (response.content as any[])?.find((c: any) => c.type === 'text')?.text || "[]";
+    let labels = [];
+    try {
+      labels = JSON.parse(dataStr);
+    } catch (e) {
+      labels = [];
+    }
+    return { success: true, labels };
+  } catch (e: any) {
+    console.error("Failed to list labels:", e);
+    return { success: false, message: e.message };
+  }
+}
+
+export async function addLabelAction(emailId: string, providerMessageId: string, label: string) {
+  try {
+    const user = await requireAuth();
+    const { client } = await getMcpClient(user.id);
+    await client.callTool({
+      name: "add_label",
+      arguments: { account: "default", uid: providerMessageId, label }
+    });
+    
+    const email = await prisma.email.findUnique({ where: { id: emailId }});
+    if (email) {
+      const currentLabels = email.labels ? email.labels.split(",").filter(l => l.trim()) : [];
+      if (!currentLabels.includes(label)) {
+        currentLabels.push(label);
+        await prisma.email.update({
+          where: { id: emailId },
+          data: { labels: currentLabels.join(",") }
+        });
+      }
+    }
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (e: any) {
+    console.error("Failed to add label:", e);
+    return { success: false, message: e.message };
+  }
+}
+
+export async function removeLabelAction(emailId: string, providerMessageId: string, label: string) {
+  try {
+    const user = await requireAuth();
+    const { client } = await getMcpClient(user.id);
+    await client.callTool({
+      name: "remove_label",
+      arguments: { account: "default", uid: providerMessageId, label }
+    });
+    
+    const email = await prisma.email.findUnique({ where: { id: emailId }});
+    if (email) {
+      const currentLabels = email.labels ? email.labels.split(",").filter(l => l.trim()) : [];
+      const newLabels = currentLabels.filter(l => l !== label);
+      await prisma.email.update({
+        where: { id: emailId },
+        data: { labels: newLabels.join(",") }
+      });
+    }
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (e: any) {
+    console.error("Failed to remove label:", e);
+    return { success: false, message: e.message };
+  }
+}
+
+export async function getEmailStatsAction() {
+  try {
+    const user = await requireAuth();
+    const { client } = await getMcpClient(user.id);
+    const response = await client.callTool({
+      name: "get_email_stats",
+      arguments: { account: "default", days: 7 }
+    });
+    
+    const dataStr = (response.content as any[])?.find((c: any) => c.type === 'text')?.text || "{}";
+    let stats = {};
+    try {
+      stats = JSON.parse(dataStr);
+    } catch (e) {
+      stats = {};
+    }
+    return { success: true, stats };
+  } catch (e: any) {
+    console.error("Failed to get email stats:", e);
+    return { success: false, message: e.message };
+  }
+}
+
+export async function bulkArchiveAction(emailIds: string[], providerMessageIds: string[]) {
+  try {
+    const user = await requireAuth();
+    const { client } = await getMcpClient(user.id);
+    
+    await client.callTool({
+      name: "bulk_action",
+      arguments: {
+        account: "default",
+        uids: providerMessageIds,
+        action: "move",
+        destination: "[Gmail]/All Mail"
+      }
+    });
+    
+    await prisma.email.deleteMany({
+      where: { id: { in: emailIds } }
+    });
+    
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (e: any) {
+    console.error("Failed bulk archive:", e);
+    return { success: false, message: e.message || "Bulk archive failed" };
   }
 }

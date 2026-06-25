@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriageAI - Autopilot Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050505;
+      --card: #0a0a0a;
+      --sidebar: #070707;
+      --pane: rgba(0,0,0,0.25);
+      --accent: #1ed43c;
+      --accent-bg: rgba(30, 212, 60, 0.08);
+      --accent-border: rgba(30, 212, 60, 0.20);
+      --glow: 0 0 20px rgba(30, 212, 60, 0.3);
+      --text-glow: 0 0 10px rgba(30, 212, 60, 0.5);
+      --border: rgba(255, 255, 255, 0.05);
+      --muted: #a1a1aa;
+      --white: #ffffff;
+      --destructive: #ff3333;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--white); height: 100vh; overflow: hidden; display: flex; }
+
+    /* TYPOGRAPHY */
+    h1, .page-title { font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+    .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+    .body-text { font-size: 13px; font-weight: 400; line-height: 1.6; }
+    .meta-text { font-size: 11px; color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .badge-text { font-size: 10px; font-weight: 700; }
+
+    /* GLOBAL SHELL */
+    .sidebar { width: 256px; min-width: 256px; height: 100%; background-color: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .sidebar-header { padding: 24px; display: flex; flex-direction: column; gap: 4px; }
+    .logo-row { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 700; }
+    .logo-sub { font-size: 10px; color: var(--accent); font-weight: 600; }
+    .nav-group { padding: 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .nav-group.bottom { flex: 0; border-top: 1px solid var(--border); }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; font-size: 14px; color: var(--muted); text-decoration: none; border: 1px solid transparent; transition: all 0.2s; }
+    .nav-item:hover { background-color: rgba(255,255,255,0.05); color: var(--white); }
+    .nav-item.active { background-color: var(--accent-bg); border-color: var(--accent-border); color: var(--accent); box-shadow: var(--glow); }
+    .nav-item svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    .main-content { flex: 1; display: flex; height: 100%; overflow-y: auto; }
+    .main-content::-webkit-scrollbar { width: 6px; }
+    .main-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+
+    /* BUTTONS */
+    .btn-primary { background: var(--accent); color: #000; border-radius: 10px; font-weight: 700; padding: 10px 12px; border: none; font-size: 13px; cursor: pointer; transition: all 0.2s; width: 100%; }
+    .btn-primary:hover { box-shadow: var(--glow); transform: scale(1.02); }
+    
+    .form-input { 
+      background: rgba(255,255,255,0.06); 
+      border: 1px solid rgba(255,255,255,0.06); 
+      border-radius: 10px; 
+      padding: 10px 14px; 
+      color: var(--white); 
+      font-size: 13px; 
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .form-input:focus { border-color: rgba(30,212,60,0.4); box-shadow: 0 0 0 3px rgba(30,212,60,0.15); }
+
+    /* PAGE LAYOUT */
+    .page-container {
+      max-width: 672px;
+      margin: 0 auto;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      width: 100%;
+    }
+    
+    .page-header { display: flex; flex-direction: column; gap: 8px; }
+    .header-row { display: flex; align-items: center; gap: 16px; }
+    .icon-box {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--accent-bg); border: 1px solid var(--accent);
+      box-shadow: var(--glow);
+      display: flex; align-items: center; justify-content: center;
+    }
+    
+    .glass-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOGGLE */
+    .toggle-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .toggle-info { display: flex; flex-direction: column; gap: 4px; }
+    .toggle-switch {
+      width: 44px; height: 24px; border-radius: 999px;
+      background: var(--accent); position: relative; cursor: pointer;
+    }
+    .toggle-thumb {
+      width: 20px; height: 20px; border-radius: 999px; background: #fff;
+      position: absolute; top: 2px; right: 2px;
+    }
+
+    .card-section { padding-top: 24px; display: flex; flex-direction: column; gap: 4px; }
+    
+    .pill-group { display: flex; gap: 8px; margin-top: 24px; }
+    .pill-btn {
+      background: transparent; border: 1px solid rgba(255,255,255,0.05);
+      color: var(--muted); border-radius: 999px; padding: 6px 16px;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    }
+    .pill-btn.active {
+      background: var(--accent-bg); border-color: var(--accent);
+      color: var(--accent); box-shadow: var(--text-glow);
+    }
+
+    .divider { height: 1px; background: rgba(255,255,255,0.05); margin: 32px 0; }
+
+    .flex-row-between { display: flex; justify-content: space-between; align-items: center; }
+
+    /* AI PROVIDER CARDS */
+    .provider-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; }
+    .provider-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px; padding: 16px; cursor: pointer;
+      display: flex; flex-direction: column; gap: 8px; transition: all 0.2s;
+      position: relative;
+    }
+    .provider-card.active {
+      border-color: var(--accent); box-shadow: var(--glow);
+    }
+    .provider-name { font-size: 14px; font-weight: 600; color: var(--white); }
+    .provider-tag { font-size: 11px; color: var(--muted); }
+    .check-icon {
+      position: absolute; top: 16px; right: 16px;
+      color: var(--accent); display: none;
+    }
+    .provider-card.active .check-icon { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-row">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        TriageAI
+      </div>
+      <div class="logo-sub">Desktop Edition</div>
+    </div>
+    
+    <div class="nav-group">
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+        Email Inbox
+      </a>
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+        LinkedIn
+      </a>
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+        Knowledge Base
+      </a>
+      <a href="#" class="nav-item active">
+        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        Autopilot
+      </a>
+    </div>
+
+    <div class="nav-group bottom">
+      <a href="#" class="nav-item">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Settings
+      </a>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="page-container">
+      
+      <div class="page-header">
+        <div class="header-row">
+          <div class="icon-box">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </div>
+          <h1>Autopilot Settings</h1>
+        </div>
+        <div style="font-size: 14px; color: var(--muted); margin-top: 4px;">Configure how frequently the AI automatically fetches and triages your inbox in the background.</div>
+      </div>
+
+      <div class="glass-card">
+        
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <div style="font-size: 14px; font-weight: 600; color: var(--white);">Enable Autopilot</div>
+            <div style="font-size: 12px; color: var(--muted);">Automatically sync and triage your inbox on a schedule.</div>
+          </div>
+          <div class="toggle-switch">
+            <div class="toggle-thumb"></div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="section-label">SYNC INTERVAL</div>
+          <div style="font-size: 12px; color: var(--muted);">How often TriageAI automatically checks for new emails.</div>
+          
+          <div class="pill-group">
+            <button class="pill-btn">15 min</button>
+            <button class="pill-btn">30 min</button>
+            <button class="pill-btn active">1 hour</button>
+            <button class="pill-btn">2 hours</button>
+            <button class="pill-btn">4 hours</button>
+          </div>
+        </div>
+        
+        <div class="divider"></div>
+
+        <div class="flex-row-between">
+          <div class="toggle-info">
+            <div class="section-label">MAX EMAILS PER SYNC</div>
+            <div style="font-size: 12px; color: var(--muted);">Limits how many emails are processed per automatic cycle.</div>
+          </div>
+          <input type="text" class="form-input" value="20" style="width: 80px; text-align: right;">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card-section">
+          <div class="section-label">AI MODEL</div>
+          
+          <div class="provider-grid">
+            <div class="provider-card active">
+              <svg class="check-icon" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <div class="provider-name">Groq (Llama 3.1)</div>
+              <div class="provider-tag">Fast</div>
+            </div>
+            <div class="provider-card">
+              <div class="provider-name">Gemini Flash</div>
+              <div class="provider-tag">Balanced</div>
+            </div>
+            <div class="provider-card">
+              <div class="provider-name">OpenRouter</div>
+              <div class="provider-tag">Flexible</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="btn-primary" style="margin-top: 16px;">Save Autopilot Settings</button>
+
+    </div>
+  </div>
+
+</body>
+</html>

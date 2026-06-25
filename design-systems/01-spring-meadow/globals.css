@@ -1,0 +1,113 @@
+/*
+ * TriageAI Design System 01: Spring Meadow
+ *
+ * A fresh, nature-inspired palette built around a warm green accent
+ * that feels organic and inviting. Like a clean Apple interface with
+ * a walk through a sunlit meadow.
+ *
+ * Mood: Fresh, grounded, approachable, alive
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* ── Core Colors ───────────────────────────── */
+  --color-background: #FAFCF8;
+  --color-foreground: #1A2E1A;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1A2E1A;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1A2E1A;
+
+  --color-primary: #22C55E;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #F0F7F0;
+  --color-secondary-foreground: #2D5A2D;
+
+  --color-muted: #F4F8F2;
+  --color-muted-foreground: #6B7E6B;
+
+  --color-accent: #22C55E;
+  --color-accent-foreground: #FFFFFF;
+
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-border: #E2EAE2;
+  --color-input: #D8E4D8;
+  --color-ring: #22C55E;
+
+  --color-sidebar: #F4F8F2;
+  --color-sidebar-foreground: #1A2E1A;
+  --color-sidebar-border: #E2EAE2;
+
+  /* ── Chart Colors ─────────────────────────── */
+  --color-chart-1: #22C55E;
+  --color-chart-2: #F59E0B;
+  --color-chart-3: #3B82F6;
+  --color-chart-4: #EC4899;
+  --color-chart-5: #8B5CF6;
+
+  /* ── Radii ─────────────────────────────────── */
+  --radius: 0.625rem;
+
+  /* ── Typography ────────────────────────────── */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Utility Classes ───────────────────────────── */
+
+/* Soft shadow with green tint */
+@utility shadow-soft {
+  box-shadow: 0 1px 3px rgba(26, 46, 26, 0.06), 0 4px 16px rgba(26, 46, 26, 0.04);
+}
+
+/* Elevated card shadow */
+@utility shadow-elevated {
+  box-shadow: 0 2px 8px rgba(26, 46, 26, 0.08), 0 12px 32px rgba(26, 46, 26, 0.06);
+}
+
+/* Primary button glow */
+@utility shadow-primary {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+}
+
+/* Glass card effect */
+@utility glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(226, 234, 226, 0.6);
+}
+
+/* Pill badge base */
+@utility badge-pill {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Base Layer ────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+}

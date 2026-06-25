@@ -1,0 +1,108 @@
+/*
+ * TriageAI Design System 03: Coral Sunset
+ *
+ * A warm, energetic palette with coral as the hero accent.
+ * Friendly and lively without being overwhelming. Like a sunset
+ * that makes you smile at the end of a long email day.
+ *
+ * Mood: Warm, energetic, friendly, optimistic
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* ── Core Colors ───────────────────────────── */
+  --color-background: #FFFAF7;
+  --color-foreground: #2A1810;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #2A1810;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #2A1810;
+
+  --color-primary: #F97316;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #FFF4ED;
+  --color-secondary-foreground: #7C3A12;
+
+  --color-muted: #FEF3EE;
+  --color-muted-foreground: #9A7160;
+
+  --color-accent: #F97316;
+  --color-accent-foreground: #FFFFFF;
+
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-border: #F0E0D4;
+  --color-input: #E8D4C6;
+  --color-ring: #F97316;
+
+  --color-sidebar: #FEF3EE;
+  --color-sidebar-foreground: #2A1810;
+  --color-sidebar-border: #F0E0D4;
+
+  /* ── Chart Colors ─────────────────────────── */
+  --color-chart-1: #F97316;
+  --color-chart-2: #22C55E;
+  --color-chart-3: #3B82F6;
+  --color-chart-4: #EC4899;
+  --color-chart-5: #A855F7;
+
+  /* ── Radii ─────────────────────────────────── */
+  --radius: 0.75rem;
+
+  /* ── Typography ────────────────────────────── */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Utility Classes ───────────────────────────── */
+
+@utility shadow-soft {
+  box-shadow: 0 1px 3px rgba(42, 24, 16, 0.05), 0 4px 16px rgba(42, 24, 16, 0.04);
+}
+
+@utility shadow-elevated {
+  box-shadow: 0 2px 8px rgba(42, 24, 16, 0.07), 0 12px 32px rgba(42, 24, 16, 0.06);
+}
+
+@utility shadow-primary {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.18);
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(240, 224, 212, 0.6);
+}
+
+@utility badge-pill {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Base Layer ────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+}

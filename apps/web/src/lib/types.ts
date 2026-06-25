@@ -10,6 +10,8 @@ export interface EmailData {
   confidenceScore?: number;
   priority?: number;
   replyNeeded?: boolean;
+  isRead?: boolean;
   providerMessageId?: string;
   time: string;
+  labels?: string;
 }

@@ -26,6 +26,9 @@ model Email {
   confidenceScore   Int?
   priority          Int?
   replyNeeded       Boolean?
+  isRead            Boolean  @default(false)
+  labels            String   @default("")
+  archivedAt        DateTime?
   userId            String   @default("default_user")
   time              DateTime @default(now())
   createdAt         DateTime @default(now())
@@ -78,6 +81,7 @@ model AppConfig {
   autoSyncLinkedIn         Boolean   @default(true)
   autoSyncIntervalEmail    Int       @default(30)
   autoSyncIntervalLinkedIn Int       @default(60)
+  watcherEnabled           Boolean   @default(false)
   lastEmailSync            DateTime?
   lastLinkedInSync         DateTime?
   updatedAt                DateTime  @updatedAt

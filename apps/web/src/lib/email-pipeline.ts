@@ -27,22 +27,71 @@ export const linkedInResponseSchema = z.object({
 
 export function parseJsonResponse<T>(text: string, schema: z.ZodSchema<T>): T {
   let parsed: any;
+  let cleanText = text;
 
   try {
-    parsed = JSON.parse(text);
-  } catch {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Could not extract JSON from AI response.");
+    parsed = JSON.parse(cleanText);
+  } catch (e) {
     try {
-      parsed = JSON.parse(jsonMatch[0]);
+      const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(sanitizeJsonStrings(jsonMatch[0]));
+      } else {
+        throw e;
+      }
     } catch {
-      const balancedMatch = extractBalancedJson(text);
+      const balancedMatch = extractBalancedJson(cleanText);
       if (!balancedMatch) throw new Error("Could not parse JSON from AI response.");
-      parsed = JSON.parse(balancedMatch);
+      parsed = JSON.parse(sanitizeJsonStrings(balancedMatch));
     }
   }
 
   return schema.parse(parsed);
+}
+
+function sanitizeJsonStrings(text: string): string {
+  let inString = false;
+  let escape = false;
+  let result = '';
+  
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    
+    if (escape) {
+      result += char;
+      escape = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      result += char;
+      escape = true;
+      continue;
+    }
+    
+    if (char === '"') {
+      inString = !inString;
+      result += char;
+      continue;
+    }
+    
+    if (inString) {
+      if (char === '\n') {
+        result += '\\n';
+      } else if (char === '\r') {
+        result += '\\r';
+      } else if (char === '\t') {
+        result += '\\t';
+      } else if (char.charCodeAt(0) < 32) {
+        // Drop other control characters safely
+      } else {
+        result += char;
+      }
+    } else {
+      result += char;
+    }
+  }
+  return result;
 }
 
 function extractBalancedJson(text: string): string | null {

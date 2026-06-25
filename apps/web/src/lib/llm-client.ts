@@ -9,9 +9,9 @@ const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
 const models = [
   groq('llama-3.1-8b-instant'),
-  google('gemini-1.5-flash'),
-  openrouter('meta-llama/llama-3.1-8b-instruct:free'),
-  groq('llama-3.3-70b-versatile')
+  openrouter('meta-llama/llama-3.1-8b-instruct'),
+  groq('gemma2-9b-it'),
+  openrouter('google/gemini-flash-1.5')
 ];
 
 export async function generateTextWithFallback(options: { prompt: string; temperature?: number }): Promise<{ text: string }> {

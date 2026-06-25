@@ -53,3 +53,12 @@ next-env.d.ts
 .vscode/
 *.swp
 *.swo
+
+.vercel
+.env*
+
+# Electron
+dist/
+release/
+out/
+

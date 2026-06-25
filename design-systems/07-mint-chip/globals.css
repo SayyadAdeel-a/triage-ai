@@ -1,0 +1,108 @@
+/*
+ * TriageAI Design System 07: Mint Chip
+ *
+ * A cool mint-teal palette that feels fresh, clean, and modern.
+ * Think Apple's Calculator app meets a spa. Cool, crisp, and
+ * instantly refreshing every time you open your inbox.
+ *
+ * Mood: Fresh, clean, modern, refreshing
+ */
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* ── Core Colors ───────────────────────────── */
+  --color-background: #F6FFFE;
+  --color-foreground: #0A2323;
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #0A2323;
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #0A2323;
+
+  --color-primary: #14B8A6;
+  --color-primary-foreground: #FFFFFF;
+
+  --color-secondary: #ECFDF5;
+  --color-secondary-foreground: #134E4A;
+
+  --color-muted: #F0FDFA;
+  --color-muted-foreground: #5E8A87;
+
+  --color-accent: #14B8A6;
+  --color-accent-foreground: #FFFFFF;
+
+  --color-destructive: #EF4444;
+  --color-destructive-foreground: #FFFFFF;
+
+  --color-border: #D5F0EC;
+  --color-input: #C1E4DF;
+  --color-ring: #14B8A6;
+
+  --color-sidebar: #F0FDFA;
+  --color-sidebar-foreground: #0A2323;
+  --color-sidebar-border: #D5F0EC;
+
+  /* ── Chart Colors ─────────────────────────── */
+  --color-chart-1: #14B8A6;
+  --color-chart-2: #3B82F6;
+  --color-chart-3: #F59E0B;
+  --color-chart-4: #EC4899;
+  --color-chart-5: #8B5CF6;
+
+  /* ── Radii ─────────────────────────────────── */
+  --radius: 0.625rem;
+
+  /* ── Typography ────────────────────────────── */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ── Utility Classes ───────────────────────────── */
+
+@utility shadow-soft {
+  box-shadow: 0 1px 3px rgba(10, 35, 35, 0.05), 0 4px 16px rgba(10, 35, 35, 0.04);
+}
+
+@utility shadow-elevated {
+  box-shadow: 0 2px 8px rgba(10, 35, 35, 0.07), 0 12px 32px rgba(10, 35, 35, 0.05);
+}
+
+@utility shadow-primary {
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.15);
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(213, 240, 236, 0.6);
+}
+
+@utility badge-pill {
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Base Layer ────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    font-family: var(--font-sans);
+  }
+}

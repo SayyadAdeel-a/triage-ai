@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { deleteRuleAction, getKnowledgeDataAction } from '../actions';
 import { AddRuleForm } from './add-rule-form';
 import { AddBulkKnowledgeForm } from './add-bulk-knowledge-form';
+import { EmailStats } from '@/components/email-stats';
 import { Brain, FileText, Trash2, HelpCircle } from 'lucide-react';
 
 export default function KnowledgePage() {
@@ -53,6 +54,11 @@ export default function KnowledgePage() {
           <p className="text-muted-foreground text-xs">Train your AI copywriter with specific directives, company documents, and business context.</p>
         </div>
       </header>
+
+      {/* Analytics Dashboard */}
+      <section className="space-y-6">
+        <EmailStats />
+      </section>
 
       {/* RULES SECTION */}
       <section className="space-y-6">
