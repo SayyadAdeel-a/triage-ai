@@ -229,83 +229,6 @@ function FeatureCard({ icon, title, description, stat, statLabel, visual, delay 
     )
 }
 
-function ThreatVisual({ type }: { type: 'skills' | 'data' | 'code' | 'supply' }) {
-    if (type === 'skills') {
-        return (
-            <div className="h-28 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center">
-                    {[180, 130, 80].map((size, i) => (
-                        <div
-                            key={i}
-                            className="absolute rounded-full border border-[#00ffab]/20"
-                            style={{ width: size, height: size }}
-                        />
-                    ))}
-                </div>
-                <div className="relative w-10 h-10 rounded-full bg-[#00ffab]/10 border border-[#00ffab]/30 flex items-center justify-center text-[#00ffab]">
-                    <AlertTriangle size={18} />
-                </div>
-            </div>
-        )
-    }
-
-    if (type === 'data') {
-        return (
-            <div className="h-28 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] p-4 flex flex-col justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#00ffab]" />
-                    <span className="text-[10px] uppercase tracking-wider text-[#eeeded]/50">Credential theft</span>
-                </div>
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-[#eeeded]/70">
-                        <span className="text-[#00ffab]">47</span> incidents
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-[#eeeded]/70">
-                        <span className="text-[#00ffab]">23</span> cases active
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-[#eeeded]/70">
-                        <span className="text-[#00ffab]">18</span> tokens
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    if (type === 'code') {
-        return (
-            <div className="h-28 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] p-4 font-mono text-[10px] leading-relaxed text-[#eeeded]/60 overflow-hidden">
-                <span className="text-[#00ffab]">$</span> deploy_agent
-                <br />
-                <span className="text-[#eeeded]/40">injecting payload...</span>
-                <br />
-                <span className="text-red-400">unauthorized access</span>
-                <br />
-                <span className="text-[#00ffab]">$</span> check_system_status
-            </div>
-        )
-    }
-
-    return (
-        <div className="h-28 rounded-2xl bg-[#0a0a0a] border border-[#1a1a1a] p-4 flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 opacity-20">
-                <svg width="100%" height="100%">
-                    <pattern id="grid" width="16" height="16" patternUnits="userSpaceOnUse">
-                        <path d="M 16 0 L 0 0 0 16" fill="none" stroke="#00ffab" strokeWidth="0.5" />
-                    </pattern>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
-                </svg>
-            </div>
-            <div className="relative flex items-center gap-3">
-                <Package size={22} className="text-[#00ffab]" />
-                <div className="text-xs text-[#eeeded]/70">
-                    <div className="text-[#00ffab] font-semibold">166</div>
-                    <div>malicious packages</div>
-                </div>
-            </div>
-        </div>
-    )
-}
-
 function PricingTier({ name, price, description, features, highlighted, delay = 0 }: PricingTierProps) {
     return (
         <motion.div
@@ -1000,4 +923,5 @@ function App() {
 }
 
 export default App
+
 
