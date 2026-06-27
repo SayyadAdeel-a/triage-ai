@@ -206,12 +206,12 @@ function FeatureCard({ icon, title, description, stat, statLabel, visual, delay 
         >
             <BorderGlow
                 className="w-full h-full"
-                edgeSensitivity={30}
+                edgeSensitivity={60}
                 glowColor="40 80 80"
                 backgroundColor="#120F17"
                 borderRadius={24}
-                glowRadius={40}
-                glowIntensity={1.0}
+                glowRadius={60}
+                glowIntensity={2.5}
                 coneSpread={25}
                 animated={false}
                 colors={['#c084fc', '#f472b6', '#38bdf8']}
@@ -303,12 +303,12 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
         >
             <BorderGlow
                 className="w-full h-full"
-                edgeSensitivity={30}
+                edgeSensitivity={60}
                 glowColor="40 80 80"
                 backgroundColor="#120F17"
                 borderRadius={28}
-                glowRadius={40}
-                glowIntensity={1.0}
+                glowRadius={60}
+                glowIntensity={2.5}
                 coneSpread={25}
                 animated={false}
                 colors={['#c084fc', '#f472b6', '#38bdf8']}
@@ -833,12 +833,12 @@ function CTASection() {
                 >
                     <BorderGlow
                         className="w-full h-full"
-                        edgeSensitivity={30}
+                        edgeSensitivity={60}
                         glowColor="40 80 80"
                         backgroundColor="#120F17"
                         borderRadius={40}
-                        glowRadius={40}
-                        glowIntensity={1.0}
+                        glowRadius={60}
+                        glowIntensity={2.5}
                         coneSpread={25}
                         animated={false}
                         colors={['#c084fc', '#f472b6', '#38bdf8']}
