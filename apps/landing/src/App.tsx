@@ -701,23 +701,8 @@ function OutcomesSection() {
 
 function PricingSection() {
     return (
-        <section id="pricing" className="relative py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a] overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none z-0 opacity-50">
-                <DotField
-                    dotRadius={1.5}
-                    dotSpacing={14}
-                    bulgeStrength={67}
-                    glowRadius={80}
-                    sparkle={false}
-                    waveAmplitude={4}
-                    cursorForce={0}
-                    gradientFrom="#00ffab"
-                    gradientTo="#00ffab"
-                    glowColor="rgba(0, 255, 171, 0.15)"
-                />
-            </div>
-            
-            <div className="max-w-7xl mx-auto relative z-10">
+        <section id="pricing" className="py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a]">
+            <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -977,19 +962,36 @@ function Footer() {
    ------------------------------------------------------------------ */
 function App() {
     return (
-        <div className="min-h-screen bg-black">
-            <Navbar />
-            <main>
-                <Hero />
-                <IntroStatement />
-                <ProblemSection />
-                <OutcomesSection />
-                <PricingSection />
-                <TeamSection />
-                <FAQ />
-                <CTASection />
-            </main>
-            <Footer />
+        <div className="relative min-h-screen bg-black">
+            <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
+                <DotField
+                    dotRadius={1.5}
+                    dotSpacing={14}
+                    bulgeStrength={67}
+                    glowRadius={80}
+                    sparkle={false}
+                    waveAmplitude={4}
+                    cursorForce={0}
+                    gradientFrom="#00ffab"
+                    gradientTo="#00ffab"
+                    glowColor="rgba(0, 255, 171, 0.15)"
+                />
+            </div>
+            
+            <div className="relative z-10 flex flex-col min-h-screen">
+                <Navbar />
+                <main className="flex-1">
+                    <Hero />
+                    <IntroStatement />
+                    <ProblemSection />
+                    <OutcomesSection />
+                    <PricingSection />
+                    <TeamSection />
+                    <FAQ />
+                    <CTASection />
+                </main>
+                <Footer />
+            </div>
         </div>
     )
 }
