@@ -18,6 +18,7 @@ import {
 import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
+import DotField from './DotField'
 
 
 /* ------------------------------------------------------------------
@@ -700,8 +701,23 @@ function OutcomesSection() {
 
 function PricingSection() {
     return (
-        <section id="pricing" className="py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a]">
-            <div className="max-w-7xl mx-auto">
+        <section id="pricing" className="relative py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a] overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none z-0 opacity-50">
+                <DotField
+                    dotRadius={1.5}
+                    dotSpacing={14}
+                    bulgeStrength={67}
+                    glowRadius={80}
+                    sparkle={false}
+                    waveAmplitude={4}
+                    cursorForce={0}
+                    gradientFrom="#00ffab"
+                    gradientTo="#00ffab"
+                    glowColor="rgba(0, 255, 171, 0.15)"
+                />
+            </div>
+            
+            <div className="max-w-7xl mx-auto relative z-10">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
