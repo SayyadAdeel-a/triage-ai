@@ -4,10 +4,6 @@ import {
     Zap,
     Clock,
     Puzzle,
-    AlertTriangle,
-    Database,
-    Code2,
-    Package,
     Check,
     ArrowRight,
     Play,
@@ -20,7 +16,7 @@ import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
-import { BentoGrid, BentoCard } from './components/ui/bento-grid'
+import MagicBento from './components/ui/MagicBento'
 
 
 /* ------------------------------------------------------------------
@@ -533,50 +529,18 @@ function ProblemSection() {
                     viewport={{ once: true, margin: '-50px' }}
                     variants={staggerContainer}
                 >
-                    <BentoGrid className="max-w-7xl mx-auto md:auto-rows-[20rem]">
-                        <BentoCard
-                            Icon={Database}
-                            name="Smart Categorization"
-                            description="Instantly routes incoming emails into actionable, high-priority folders."
-                            className="lg:col-span-1"
-                            background={<div className="absolute inset-0 bg-[#00ffab]/5 hover:bg-[#00ffab]/10 transition-colors" />}
-                        />
-                        <BentoCard
-                            Icon={Code2}
-                            name="Autonomous Drafting"
-                            description="Pre-writes highly accurate replies based on your past email history so you only have to review and send."
-                            className="lg:col-span-2"
-                            background={<div className="absolute inset-0 bg-[#00ffab]/5 hover:bg-[#00ffab]/10 transition-colors" />}
-                        />
-                        <BentoCard
-                            Icon={Package}
-                            name="Custom Knowledge Base"
-                            description="Upload documents to train the AI on how to answer specific business questions and automatically generate accurate responses."
-                            className="lg:col-span-2"
-                            background={<div className="absolute inset-0 bg-[#00ffab]/5 hover:bg-[#00ffab]/10 transition-colors" />}
-                        />
-                        <BentoCard
-                            Icon={Zap}
-                            name="Autopilot Mode"
-                            description="Runs 24/7 in the background so you wake up to a perfectly clean inbox."
-                            className="lg:col-span-1"
-                            background={<div className="absolute inset-0 bg-[#00ffab]/5 hover:bg-[#00ffab]/10 transition-colors" />}
-                        />
-                        <BentoCard
-                            Icon={AlertTriangle}
-                            name="Bulk Actions"
-                            description="Archive or delete entire categories of useless emails with a single click."
-                            className="lg:col-span-1"
-                            background={<div className="absolute inset-0 bg-[#00ffab]/5 hover:bg-[#00ffab]/10 transition-colors" />}
-                        />
-                        <BentoCard
-                            Icon={Check}
-                            name="Local Processing"
-                            description="Uses local models and secure APIs to keep your private data entirely on your machine. Your data never leaves your environment."
-                            className="lg:col-span-2"
-                            background={<div className="absolute inset-0 bg-[#00ffab]/5 hover:bg-[#00ffab]/10 transition-colors" />}
-                        />
-                    </BentoGrid>
+                    <MagicBento 
+                        textAutoHide={false}
+                        enableStars={true}
+                        enableSpotlight={true}
+                        enableBorderGlow={true}
+                        enableTilt={true}
+                        enableMagnetism={true}
+                        clickEffect={true}
+                        spotlightRadius={300}
+                        particleCount={12}
+                        glowColor="0, 255, 171"
+                    />
                 </motion.div>
             </div>
         </section>
