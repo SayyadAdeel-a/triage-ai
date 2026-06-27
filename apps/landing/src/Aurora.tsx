@@ -139,7 +139,10 @@ export default function Aurora(props: AuroraProps) {
       gl = renderer.gl;
       if (!gl) throw new Error('No WebGL context returned');
     } catch (err) {
-      console.error('Aurora component: WebGL context could not be created.', err);
+      console.warn('Aurora component: WebGL context could not be created. Falling back to CSS animation.', err);
+      if (ctn) {
+        ctn.classList.add('aurora-fallback');
+      }
       return;
     }
     
