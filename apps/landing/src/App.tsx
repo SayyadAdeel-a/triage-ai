@@ -969,7 +969,7 @@ function App() {
                     dotSpacing={14}
                     bulgeStrength={80}
                     glowRadius={120}
-                    sparkle={true}
+                    sparkle={false}
                     waveAmplitude={6}
                     cursorForce={0.2}
                     gradientFrom="#00ffab"

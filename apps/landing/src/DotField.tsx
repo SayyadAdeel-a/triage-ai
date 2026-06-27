@@ -78,8 +78,8 @@ const DotField = memo(({
       sizeRef.current = {
         w,
         h,
-        offsetX: rect.left + window.scrollX,
-        offsetY: rect.top + window.scrollY,
+        offsetX: rect.left,
+        offsetY: rect.top,
       };
 
       buildDots(w, h);
@@ -107,8 +107,13 @@ const DotField = memo(({
 
     function onMouseMove(e: MouseEvent) {
       const s = sizeRef.current;
-      mouseRef.current.x = e.pageX - s.offsetX;
-      mouseRef.current.y = e.pageY - s.offsetY;
+      // Get the bounding rect dynamically to handle scroll updates if it's not fixed
+      const rect = canvasRef.current?.parentElement?.getBoundingClientRect();
+      const offsetX = rect ? rect.left : s.offsetX;
+      const offsetY = rect ? rect.top : s.offsetY;
+      
+      mouseRef.current.x = e.clientX - offsetX;
+      mouseRef.current.y = e.clientY - offsetY;
     }
 
     function updateMouseSpeed() {
