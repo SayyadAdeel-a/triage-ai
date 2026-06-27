@@ -20,6 +20,7 @@ import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
+import ScrollReveal from './components/ui/ScrollReveal'
 
 
 /* ------------------------------------------------------------------
@@ -126,7 +127,9 @@ function SectionHeading({ children, className = '' }: { children: React.ReactNod
         <h2
             className={`text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] ${className}`}
         >
-            {children}
+            {typeof children === 'string' ? (
+                <ScrollReveal baseOpacity={0} blurStrength={6}>{children}</ScrollReveal>
+            ) : children}
         </h2>
     )
 }
@@ -398,14 +401,14 @@ function Hero() {
                         variants={fadeUp}
                         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.05] mb-6"
                     >
-                        Take back control.<br /><span className="gradient-text">Your AI executive assistant.</span>
+                        <ScrollReveal baseOpacity={0} blurStrength={10}>Take back control.</ScrollReveal><br /><span className="gradient-text"><ScrollReveal baseOpacity={0} blurStrength={10}>Your AI executive assistant.</ScrollReveal></span>
                     </motion.h1>
 
                     <motion.p
                         variants={fadeUp}
                         className="max-w-2xl mx-auto text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10"
                     >
-                        TriageAI automatically categorizes emails, drafts contextual replies, and learns from your behavior to save you hours every week.
+                        <ScrollReveal baseOpacity={0} blurStrength={4} baseRotation={0}>TriageAI automatically categorizes emails, drafts contextual replies, and learns from your behavior to save you hours every week.</ScrollReveal>
                     </motion.p>
 
                     <motion.div
@@ -482,7 +485,7 @@ function IntroStatement() {
                         variants={fadeUp}
                         className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-8"
                     >
-                        Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow.
+                        <ScrollReveal baseOpacity={0} blurStrength={8}>Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow.</ScrollReveal>
                     </motion.h2>
 
                     <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -522,7 +525,7 @@ function ProblemSection() {
                         <SectionLabel>Core Features</SectionLabel>
                     </motion.div>
                     <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                        Your inbox, <span className="text-[#00ffab]">fully automated.</span>
+                        <ScrollReveal baseOpacity={0} blurStrength={6}>Your inbox,</ScrollReveal> <span className="text-[#00ffab]"><ScrollReveal baseOpacity={0} blurStrength={6}>fully automated.</ScrollReveal></span>
                     </motion.h2>
                 </motion.div>
 
@@ -590,9 +593,9 @@ function OutcomesSection() {
                         <SectionLabel>Outcomes</SectionLabel>
                     </motion.div>
                     <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15]">
-                        Real outcomes from
+                        <ScrollReveal baseOpacity={0} blurStrength={6}>Real outcomes from</ScrollReveal>
                         <br />
-                        <span className="gradient-text">secure AI operations</span>
+                        <span className="gradient-text"><ScrollReveal baseOpacity={0} blurStrength={6}>secure AI operations</ScrollReveal></span>
                     </motion.h2>
                 </motion.div>
 
@@ -646,12 +649,12 @@ function PricingSection() {
                         <SectionLabel>Pricing</SectionLabel>
                     </motion.div>
                     <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                        One-time deployment.
+                        <ScrollReveal baseOpacity={0} blurStrength={6}>One-time deployment.</ScrollReveal>
                         <br />
-                        <span className="text-[#eeeded]/60">No subscriptions.</span>
+                        <span className="text-[#eeeded]/60"><ScrollReveal baseOpacity={0} blurStrength={6}>No subscriptions.</ScrollReveal></span>
                     </motion.h2>
                     <motion.p variants={fadeUp} className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed">
-                        You pay once. You own the infrastructure. No recurring fees, no vendor lock-in.
+                        <ScrollReveal baseOpacity={0} blurStrength={4} baseRotation={0}>You pay once. You own the infrastructure. No recurring fees, no vendor lock-in.</ScrollReveal>
                     </motion.p>
                 </motion.div>
 
@@ -720,9 +723,9 @@ function TeamSection() {
                         <SectionLabel>Team</SectionLabel>
                     </motion.div>
                     <motion.h2 variants={fadeUp} className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15]">
-                        Built by engineers who&apos;ve
+                        <ScrollReveal baseOpacity={0} blurStrength={6}>Built by engineers who've</ScrollReveal>
                         <br />
-                        <span className="gradient-text">deployed AI at scale</span>
+                        <span className="gradient-text"><ScrollReveal baseOpacity={0} blurStrength={6}>deployed AI at scale</ScrollReveal></span>
                     </motion.h2>
                 </motion.div>
 
@@ -787,10 +790,10 @@ function CTASection() {
                             <div className="relative z-10">
                                 <SectionLabel>Get Started</SectionLabel>
                                 <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                                    Ready to take back control of your inbox?
+                                    <ScrollReveal baseOpacity={0} blurStrength={8}>Ready to take back control of your inbox?</ScrollReveal>
                                 </h2>
                                 <p className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10 max-w-xl mx-auto">
-                                    Join thousands of executives saving 10+ hours a week.
+                                    <ScrollReveal baseOpacity={0} blurStrength={4} baseRotation={0}>Join thousands of executives saving 10+ hours a week.</ScrollReveal>
                                 </p>
 
                                 <form
