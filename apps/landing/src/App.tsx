@@ -210,7 +210,7 @@ function FeatureCard({ icon, title, description, stat, statLabel, visual, delay 
                 glowColor="40 80 80"
                 backgroundColor="#120F17"
                 borderRadius={24}
-                glowRadius={60}
+                glowRadius={120}
                 glowIntensity={2.5}
                 coneSpread={25}
                 animated={false}
@@ -307,7 +307,7 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
                 glowColor="40 80 80"
                 backgroundColor="#120F17"
                 borderRadius={28}
-                glowRadius={60}
+                glowRadius={120}
                 glowIntensity={2.5}
                 coneSpread={25}
                 animated={false}
@@ -512,7 +512,7 @@ function Hero() {
                         </div>
                         <div className="aspect-[16/10] mt-14">
                             <img
-                                src="/uploads/hero-speaker.png"
+                                src="https://images.unsplash.com/photo-1540317580384-e5d43616b9aa?w=1600&auto=format&fit=crop&q=80"
                                 alt="Product walkthrough presenter"
                                 className="w-full h-full object-cover object-top"
                             />
@@ -797,19 +797,19 @@ function TeamSection() {
                     <TeamMember
                         name="Brody Glanville"
                         role="CEO"
-                        image="/uploads/team-brody.png"
+                        image="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&auto=format&fit=crop&q=80"
                         delay={0}
                     />
                     <TeamMember
                         name="Bennett Spooner"
                         role="COO"
-                        image="/uploads/team-bennett.png"
+                        image="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80"
                         delay={0.1}
                     />
                     <TeamMember
                         name="Jesse Rutka"
                         role="CTO"
-                        image="/uploads/team-jesse.png"
+                        image="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&auto=format&fit=crop&q=80"
                         delay={0.2}
                     />
                 </motion.div>
@@ -837,7 +837,7 @@ function CTASection() {
                         glowColor="40 80 80"
                         backgroundColor="#120F17"
                         borderRadius={40}
-                        glowRadius={60}
+                        glowRadius={120}
                         glowIntensity={2.5}
                         coneSpread={25}
                         animated={false}
