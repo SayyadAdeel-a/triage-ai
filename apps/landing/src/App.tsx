@@ -12,7 +12,6 @@ import {
     ArrowRight,
     Play,
     ChevronRight,
-    Shield,
     Cog,
     Banknote,
     Users
@@ -86,8 +85,8 @@ const scaleIn: Variants = {
    ------------------------------------------------------------------ */
 function Navbar() {
     const navItems = [
-        { name: 'Security', url: '#security', icon: Shield },
         { name: 'Process', url: '#process', icon: Cog },
+        { name: 'Features', url: '#features', icon: Zap },
         { name: 'Pricing', url: '#pricing', icon: Banknote },
         { name: 'Team', url: '#team', icon: Users }
     ]
