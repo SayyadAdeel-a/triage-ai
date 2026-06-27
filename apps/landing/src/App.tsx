@@ -440,7 +440,7 @@ function Hero() {
     const y1 = useTransform(scrollY, [0, 500], [0, 80])
 
     return (
-        <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
+        <section className="relative min-h-screen bg-black flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
             {/* Background glow */}
             <div className="absolute inset-0 pointer-events-none z-0">
                 <div className="absolute inset-0 opacity-40 mix-blend-screen">

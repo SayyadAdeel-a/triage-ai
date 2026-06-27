@@ -152,6 +152,12 @@ const DotField = memo(({
         glowEl.style.opacity = glowOpacity.current.toString();
       }
 
+      // Pause rendering completely while in the Hero section to save GPU for Aurora
+      if (window.scrollY < window.innerHeight * 0.8) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
       if (!ctx) return;
       ctx.clearRect(0, 0, w, h);
 
