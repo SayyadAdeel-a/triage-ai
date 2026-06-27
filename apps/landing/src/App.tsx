@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
+import Aurora from './Aurora'
 
 
 /* ------------------------------------------------------------------
@@ -440,8 +441,13 @@ function Hero() {
     return (
         <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
             {/* Background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[#00ffab]/8 rounded-full blur-[140px] pointer-events-none" />
-            <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-[#00ffab]/5 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute inset-0 pointer-events-none z-0">
+                <div className="absolute inset-0 opacity-40 mix-blend-screen">
+                    <Aurora colorStops={["#c084fc", "#00ffab", "#f472b6"]} blend={0.6} amplitude={1.2} speed={0.5} />
+                </div>
+                {/* Subtle fade to bottom */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black" />
+            </div>
 
             <div className="relative z-10 max-w-5xl mx-auto text-center">
                 <motion.div
