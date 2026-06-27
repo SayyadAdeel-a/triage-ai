@@ -92,7 +92,26 @@ function Navbar() {
         { name: 'Team', url: '#team', icon: Users }
     ]
 
-    return <TubelightNavbar items={navItems} />
+    return (
+        <>
+            <TubelightNavbar items={navItems} />
+            <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 md:px-8 h-20 pointer-events-none">
+                <a href="#" className="pointer-events-auto flex items-center gap-3 text-[#eeeded] font-semibold tracking-[0.12em] text-sm uppercase hover:text-white transition-colors">
+                    <img src="/triageai_icon_mark.jpg" alt="TriageAI Logo" className="w-8 h-8 rounded-md" />
+                    TriageAI
+                </a>
+                <div className="hidden md:block pointer-events-auto">
+                    <a
+                        href="#cta"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-colors duration-200 btn-primary-shadow"
+                    >
+                        Start for free
+                        <ArrowRight size={14} strokeWidth={2.5} />
+                    </a>
+                </div>
+            </div>
+        </>
+    )
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
