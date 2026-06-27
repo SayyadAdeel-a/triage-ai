@@ -49,42 +49,42 @@ async function checkRateLimit(userId: string, actionName: string) {
   }
 }
 
-export async function syncEmailsAction() {
+async function withAuthAndRateLimit<T>(
+  actionName: string | null,
+  handler: (user: any) => Promise<T>
+): Promise<(T & { message?: string }) | { success: false, message: string }> {
   try {
     const user = await requireAuth();
-    await checkRateLimit(user.id, "syncEmails");
-    
+    if (actionName) await checkRateLimit(user.id, actionName);
+    return (await handler(user)) as any;
+  } catch (e: any) {
+    if (e.code === 'P2002') return { success: false, message: "Record already exists" };
+    return { success: false, message: e.errors ? e.errors[0].message : e.message };
+  }
+}
+
+export async function syncEmailsAction() {
+  return withAuthAndRateLimit("syncEmails", async (user) => {
     const result = await processEmails(user.id);
-    
     await prisma.appConfig.update({
       where: { userId: user.id },
       data: { lastEmailSync: new Date() }
     });
-    
     revalidatePath("/");
     return result;
-  } catch (e: any) {
-    return { success: false, message: e.message };
-  }
+  });
 }
 
 export async function syncLinkedInAction() {
-  try {
-    const user = await requireAuth();
-    await checkRateLimit(user.id, "syncLinkedIn");
-    
+  return withAuthAndRateLimit("syncLinkedIn", async (user) => {
     const result = await processLinkedInMessages(user.id);
-    
     await prisma.appConfig.update({
       where: { userId: user.id },
       data: { lastLinkedInSync: new Date() }
     });
-    
     revalidatePath("/");
     return result;
-  } catch (e: any) {
-    return { success: false, message: e.message };
-  }
+  });
 }
 
 import { createLinkedInMcpClient } from "@/lib/linkedin-mcp-client";
@@ -174,86 +174,59 @@ export async function disconnectLinkedInAction() {
 }
 
 export async function reProcessEmailsAction() {
-  try {
-    const user = await requireAuth();
-    await checkRateLimit(user.id, "reProcessEmails");
-    
+  return withAuthAndRateLimit("reProcessEmails", async (user) => {
     const result = await reProcessAllEmails(user.id);
     revalidatePath("/");
     return result;
-  } catch (e: any) {
-    return { success: false, message: e.message };
-  }
+  });
 }
 
 export async function reProcessLinkedInAction() {
-  try {
-    const user = await requireAuth();
-    await checkRateLimit(user.id, "reProcessLinkedIn");
-    
+  return withAuthAndRateLimit("reProcessLinkedIn", async (user) => {
     const result = await reProcessAllLinkedInMessages(user.id);
     revalidatePath("/");
     return result;
-  } catch (e: any) {
-    return { success: false, message: e.message };
-  }
+  });
 }
 
 export async function addCategoryAction(name: string) {
-  try {
-    const user = await requireAuth();
+  return withAuthAndRateLimit(null, async (user) => {
     const validated = categorySchema.parse({ name: name.trim() });
-    
     await prisma.category.create({
       data: { name: validated.name, userId: user.id }
     });
     revalidatePath("/");
     return { success: true };
-  } catch (e: any) {
-    if (e.code === 'P2002') return { success: false, message: "Category already exists" };
-    return { success: false, message: e.errors ? e.errors[0].message : e.message };
-  }
+  });
 }
 
 export async function addRuleAction(title: string, content: string) {
-  try {
-    const user = await requireAuth();
+  return withAuthAndRateLimit(null, async (user) => {
     const validated = ruleSchema.parse({ title: title.trim(), content: content.trim() });
-    
     await prisma.rule.create({
       data: { title: validated.title, content: validated.content, userId: user.id }
     });
     revalidatePath("/knowledge");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, message: e.errors ? e.errors[0].message : e.message };
-  }
+  });
 }
 
 export async function deleteRuleAction(id: string) {
-  try {
-    await requireAuth();
+  return withAuthAndRateLimit(null, async () => {
     const validId = idSchema.parse(id);
-    
     await prisma.rule.delete({ where: { id: validId } });
     revalidatePath("/knowledge");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, message: e.errors ? e.errors[0].message : e.message };
-  }
+  });
 }
 
 export async function deleteKnowledgeAction(id: string) {
-  try {
-    await requireAuth();
+  return withAuthAndRateLimit(null, async () => {
     const validId = idSchema.parse(id);
-    
     await prisma.knowledge.delete({ where: { id: validId } });
     revalidatePath("/knowledge");
     return { success: true };
-  } catch (e: any) {
-    return { success: false, message: e.errors ? e.errors[0].message : e.message };
-  }
+  });
 }
 
 export async function addBulkKnowledgeAction(content: string) {

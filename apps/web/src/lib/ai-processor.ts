@@ -17,8 +17,120 @@ function cleanEmailText(text: string): string {
   });
   cleaned = cleaned.replace(/\(\s*\[link\]\s*\)/g, '');
   cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
-  cleaned = cleaned.replace(/\n\s*-\s*\n\s*/g, '\n- ');
   return cleaned.trim();
+}
+
+async function processEmailBatch(mcp: any, batchIds: string[], userId: string, globalRulesPrompt: string, parsedKnowledge: any[]): Promise<number> {
+  const bodiesResponse = await mcp.client.callTool({
+    name: "get_emails",
+    arguments: { account: "default", ids: batchIds, format: "text", maxLength: 3000 }
+  });
+  let bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
+  bodiesText = cleanEmailText(bodiesText);
+
+  const safeBodiesText = applyDeterministicFilters(redactSecrets(bodiesText));
+
+  console.log(`Running semantic search (RAG) for batch (${batchIds.length} safe emails)...`);
+  const knowledgeText = await getRelevantKnowledgeFromParsed(parsedKnowledge as any, safeBodiesText);
+  const knowledgePrompt = knowledgeText
+    ? `\n\n--- KNOWLEDGE BASE (TOP RELEVANT) ---\nYou MUST strictly follow these rules and information when drafting replies:\n${knowledgeText}\n----------------------\n`
+    : "";
+
+  console.log("Calling AI to categorize and summarize batch...");
+
+  const { text } = await generateTextWithFallback({
+    prompt: `Analyze the following unread emails from a founder's inbox.
+The emails are provided in a text dump below. Each email is separated and includes its [ID], Subject, Sender, Date, and Body.
+
+Your job is to act as a highly intelligent email assistant.${globalRulesPrompt}
+
+For each email:
+1. Extract its ID (the string inside the brackets like [12345] in the header "━━━ [12345]").
+2. Extract the Sender's Name and Email.
+3. Classify the email by SENDER INTENT using this STRICT HIERARCHY:
+   - Rule 1: 'Needs Reply' → A genuine 1-on-1 communication where you have a real relationship or obligation to reply (e.g. your customer asking for support/pricing, an investor intro, a colleague). 
+     *CRITICAL*: If someone asks YOU about YOUR pricing/product, it IS 'Needs Reply'. 
+     *CRITICAL*: Marketers and cold-emailers often use "fake 1-on-1" tactics (e.g. "Reply and let me know"). If the email is pitching you a product, a startup listing, or a service, it is 'Promotions'. Emails from generic addresses like 'noreply', 'support@', 'info@' NEVER need a reply.
+   - Rule 2: 'Google Alerts' → ANY security alert, sign-in notification, recovery email, or device setup email from Google ('no-reply@accounts.google.com', etc).
+   - Rule 3: 'Notifications' → Automated system alerts, receipts, password resets, GitHub/Supabase/Facebook alerts.
+   - Rule 4: 'Important' → Highly critical business alerts that demand attention (billing failed, domain expiring) OR Newsletters/Insights specifically mentioning YOUR products (like 'Tenreq').
+   - Rule 5: 'Newsletters' → Digests, Substack, blog updates, or any email with an unsubscribe link (unless it specifically mentions your own product).
+   - Rule 6: 'Promotions' → Sales pitches, startup listings (e.g. Acquire.com), product feature announcements, free trials, discounts, or cold outreach.
+   - Rule 7: 'Ignore' → Everything else (noise, spam).
+   (Note: If the email contains highly sensitive PII, passwords, or secrets, you may classify it as 'Sensitive').
+4. Determine the 'priority' on a scale of 1 to 5 (5 being highest, 1 being lowest).
+5. Determine 'replyNeeded' (true/false) based on whether the human expects a response.
+6. Generate a confidenceScore (integer between 0 and 100) indicating how certain you are.
+7. Generate a concise summary (max 2 lines).
+8. If 'replyNeeded' is true, generate a draft response. The reply MUST be in the style of a busy startup founder: extremely short, direct, and conversational. NO corporate jargon. NO formal greetings. Just answer or acknowledge immediately. Use the KNOWLEDGE BASE provided below to answer any questions accurately. If the knowledge base says to decline something, decline it politely. Otherwise, set draftReply to null.${knowledgePrompt}
+
+You MUST respond ONLY with a raw JSON object matching exactly this structure. 
+CRITICAL JSON RULES:
+- MUST be valid JSON.
+- Escape all double quotes inside strings using \".
+- Do NOT use raw newlines inside strings, use \n instead.
+- Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
+{
+  "emails": [
+    {
+      "id": "12345",
+      "subject": "The exact subject",
+      "senderName": "John Doe",
+      "senderEmail": "john@example.com",
+      "category": "Needs Reply",
+      "priority": 5,
+      "replyNeeded": true,
+      "confidenceScore": 95,
+      "summary": "John is asking for a meeting on Tuesday.",
+      "draftReply": "Tuesday works perfectly. Let's do 2 PM. Cheers"
+    }
+  ]
+}
+
+Emails to process:
+${safeBodiesText}`
+  });
+
+  const object = parseJsonResponse(text, emailResponseSchema);
+  const safeBodyMap = extractBodyMap(safeBodiesText);
+  let count = 0;
+
+  for (const email of object.emails) {
+    const emailId = email.id;
+    if (!batchIds.includes(emailId)) continue;
+
+    await prisma.email.upsert({
+      where: { providerMessageId: emailId },
+      update: {
+        subject: email.subject,
+        senderName: email.senderName,
+        senderEmail: email.senderEmail,
+        category: email.category,
+        priority: email.priority,
+        replyNeeded: email.replyNeeded,
+        confidenceScore: email.confidenceScore,
+        summary: email.summary,
+        draftReply: email.draftReply,
+        originalBody: safeBodyMap.get(emailId) || null,
+      },
+      create: {
+        userId,
+        providerMessageId: emailId,
+        subject: email.subject,
+        senderName: email.senderName,
+        senderEmail: email.senderEmail,
+        category: email.category,
+        priority: email.priority,
+        replyNeeded: email.replyNeeded,
+        confidenceScore: email.confidenceScore,
+        summary: email.summary,
+        draftReply: email.draftReply,
+        originalBody: safeBodyMap.get(emailId) || null,
+      }
+    });
+    count++;
+  }
+  return count;
 }
 
 export async function processEmails(userId: string) {
@@ -91,116 +203,7 @@ export async function processEmails(userId: string) {
       console.log(`Fetching bodies for batch ${Math.floor(i / 3) + 1} (${batchIds.length} emails)...`);
 
       try {
-        const bodiesResponse = await mcp.client.callTool({
-          name: "get_emails",
-          arguments: { account: "default", ids: batchIds, format: "text", maxLength: 3000 }
-        });
-        let bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
-        bodiesText = cleanEmailText(bodiesText);
-
-        const safeBodiesText = applyDeterministicFilters(redactSecrets(bodiesText));
-
-        console.log(`Running semantic search (RAG) for batch (${batchIds.length} safe emails)...`);
-        const knowledgeText = await getRelevantKnowledgeFromParsed(parsedKnowledge as any, safeBodiesText);
-        const knowledgePrompt = knowledgeText
-          ? `\n\n--- KNOWLEDGE BASE (TOP RELEVANT) ---\nYou MUST strictly follow these rules and information when drafting replies:\n${knowledgeText}\n----------------------\n`
-          : "";
-
-        console.log("Calling AI to categorize and summarize batch...");
-
-        const { text } = await generateTextWithFallback({
-          prompt: `Analyze the following unread emails from a founder's inbox.
-The emails are provided in a text dump below. Each email is separated and includes its [ID], Subject, Sender, Date, and Body.
-
-Your job is to act as a highly intelligent email assistant.${globalRulesPrompt}
-
-For each email:
-1. Extract its ID (the string inside the brackets like [12345] in the header "━━━ [12345]").
-2. Extract the Sender's Name and Email.
-3. Classify the email by SENDER INTENT using this STRICT HIERARCHY:
-   - Rule 1: 'Needs Reply' → A genuine 1-on-1 communication where you have a real relationship or obligation to reply (e.g. your customer asking for support/pricing, an investor intro, a colleague). 
-     *CRITICAL*: If someone asks YOU about YOUR pricing/product, it IS 'Needs Reply'. 
-     *CRITICAL*: Marketers and cold-emailers often use "fake 1-on-1" tactics (e.g. "Reply and let me know"). If the email is pitching you a product, a startup listing, or a service, it is 'Promotions'. Emails from generic addresses like 'noreply', 'support@', 'info@' NEVER need a reply.
-   - Rule 2: 'Google Alerts' → ANY security alert, sign-in notification, recovery email, or device setup email from Google ('no-reply@accounts.google.com', etc).
-   - Rule 3: 'Notifications' → Automated system alerts, receipts, password resets, GitHub/Supabase/Facebook alerts.
-   - Rule 4: 'Important' → Highly critical business alerts that demand attention (billing failed, domain expiring) OR Newsletters/Insights specifically mentioning YOUR products (like 'Tenreq').
-   - Rule 5: 'Newsletters' → Digests, Substack, blog updates, or any email with an unsubscribe link (unless it specifically mentions your own product).
-   - Rule 6: 'Promotions' → Sales pitches, startup listings (e.g. Acquire.com), product feature announcements, free trials, discounts, or cold outreach.
-   - Rule 7: 'Ignore' → Everything else (noise, spam).
-   (Note: If the email contains highly sensitive PII, passwords, or secrets, you may classify it as 'Sensitive').
-4. Determine the 'priority' on a scale of 1 to 5 (5 being highest, 1 being lowest).
-5. Determine 'replyNeeded' (true/false) based on whether the human expects a response.
-6. Generate a confidenceScore (integer between 0 and 100) indicating how certain you are.
-7. Generate a concise summary (max 2 lines).
-8. If 'replyNeeded' is true, generate a draft response. The reply MUST be in the style of a busy startup founder: extremely short, direct, and conversational. NO corporate jargon. NO formal greetings. Just answer or acknowledge immediately. Use the KNOWLEDGE BASE provided below to answer any questions accurately. If the knowledge base says to decline something, decline it politely. Otherwise, set draftReply to null.${knowledgePrompt}
-
-You MUST respond ONLY with a raw JSON object matching exactly this structure. 
-CRITICAL JSON RULES:
-- MUST be valid JSON.
-- Escape all double quotes inside strings using \".
-- Do NOT use raw newlines inside strings, use \n instead.
-- Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
-{
-  "emails": [
-    {
-      "id": "12345",
-      "subject": "The exact subject",
-      "senderName": "John Doe",
-      "senderEmail": "john@example.com",
-      "category": "Needs Reply",
-      "priority": 5,
-      "replyNeeded": true,
-      "confidenceScore": 95,
-      "summary": "John is asking for a meeting on Tuesday.",
-      "draftReply": "Tuesday works perfectly. Let's do 2 PM. Cheers"
-    }
-  ]
-}
-
-Emails to process:
-${safeBodiesText}`
-        });
-
-        const object = parseJsonResponse(text, emailResponseSchema);
-
-        // Save redacted bodies to DB (Issue 7 fix)
-        const safeBodyMap = extractBodyMap(safeBodiesText);
-
-        for (const email of object.emails) {
-          const emailId = email.id;
-          if (!batchIds.includes(emailId)) continue;
-
-          await prisma.email.upsert({
-            where: { providerMessageId: emailId },
-            update: {
-              subject: email.subject,
-              senderName: email.senderName,
-              senderEmail: email.senderEmail,
-              category: email.category,
-              priority: email.priority,
-              replyNeeded: email.replyNeeded,
-              confidenceScore: email.confidenceScore,
-              summary: email.summary,
-              draftReply: email.draftReply,
-              originalBody: safeBodyMap.get(emailId) || null,
-            },
-            create: {
-              userId,
-              providerMessageId: emailId,
-              subject: email.subject,
-              senderName: email.senderName,
-              senderEmail: email.senderEmail,
-              category: email.category,
-              priority: email.priority,
-              replyNeeded: email.replyNeeded,
-              confidenceScore: email.confidenceScore,
-              summary: email.summary,
-              draftReply: email.draftReply,
-              originalBody: safeBodyMap.get(emailId) || null,
-            }
-          });
-          processedCount++;
-        }
+        processedCount += await processEmailBatch(mcp, batchIds, userId, globalRulesPrompt, parsedKnowledge);
       } catch (e) {
         console.error(`Failed to process batch ${Math.floor(i / 3) + 1}:`, e);
       }
@@ -253,111 +256,7 @@ export async function reProcessAllEmails(userId: string) {
       console.log(`Fetching bodies for batch ${Math.floor(i / 3) + 1} (${batchIds.length} emails)...`);
 
       try {
-        const bodiesResponse = await mcp.client.callTool({
-          name: "get_emails",
-          arguments: { account: "default", ids: batchIds, format: "text", maxLength: 3000 }
-        });
-        let bodiesText: string = (bodiesResponse.content as any[]).find((c: any) => c.type === 'text')?.text || "";
-        bodiesText = cleanEmailText(bodiesText);
-
-        const safeBodiesText = applyDeterministicFilters(redactSecrets(bodiesText));
-
-        const knowledgeText = await getRelevantKnowledgeFromParsed(parsedKnowledge as any, safeBodiesText);
-        const knowledgePrompt = knowledgeText ? `\n\n--- KNOWLEDGE BASE (TOP RELEVANT) ---\nYou MUST strictly follow these rules and information when drafting replies:\n${knowledgeText}\n----------------------\n` : "";
-
-        console.log("Calling AI to categorize and summarize batch...");
-
-        const { text } = await generateTextWithFallback({
-          prompt: `Analyze the following unread emails from a founder's inbox.
-The emails are provided in a text dump below. Each email is separated and includes its [ID], Subject, Sender, Date, and Body.
-
-Your job is to act as a highly intelligent email assistant.${globalRulesPrompt}
-
-For each email:
-1. Extract its ID (the string inside the brackets like [12345] in the header "━━━ [12345]").
-2. Extract the Sender's Name and Email.
-3. Classify the email by SENDER INTENT using this STRICT HIERARCHY:
-   - Rule 1: 'Needs Reply' → A genuine 1-on-1 communication where you have a real relationship or obligation to reply (e.g. your customer asking for support/pricing, an investor intro, a colleague). 
-     *CRITICAL*: If someone asks YOU about YOUR pricing/product, it IS 'Needs Reply'. 
-     *CRITICAL*: Marketers and cold-emailers often use "fake 1-on-1" tactics (e.g. "Reply and let me know"). If the email is pitching you a product, a startup listing, or a service, it is 'Promotions'. Emails from generic addresses like 'noreply', 'support@', 'info@' NEVER need a reply.
-   - Rule 2: 'Google Alerts' → ANY security alert, sign-in notification, recovery email, or device setup email from Google ('no-reply@accounts.google.com', etc).
-   - Rule 3: 'Notifications' → Automated system alerts, receipts, password resets, GitHub/Supabase/Facebook alerts.
-   - Rule 4: 'Important' → Highly critical business alerts that demand attention (billing failed, domain expiring) OR Newsletters/Insights specifically mentioning YOUR products (like 'Tenreq').
-   - Rule 5: 'Newsletters' → Digests, Substack, blog updates, or any email with an unsubscribe link (unless it specifically mentions your own product).
-   - Rule 6: 'Promotions' → Sales pitches, startup listings (e.g. Acquire.com), product feature announcements, free trials, discounts, or cold outreach.
-   - Rule 7: 'Ignore' → Everything else (noise, spam).
-   (Note: If the email contains highly sensitive PII, passwords, or secrets, you may classify it as 'Sensitive').
-4. Determine the 'priority' on a scale of 1 to 5 (5 being highest, 1 being lowest).
-5. Determine 'replyNeeded' (true/false) based on whether the human expects a response.
-6. Generate a confidenceScore (integer between 0 and 100) indicating how certain you are.
-7. Generate a concise summary (max 2 lines).
-8. If 'replyNeeded' is true, generate a draft response. The reply MUST be in the style of a busy startup founder: extremely short, direct, and conversational. NO corporate jargon. NO formal greetings. Just answer or acknowledge immediately. Use the KNOWLEDGE BASE provided below to answer any questions accurately. If the knowledge base says to decline something, decline it politely. Otherwise, set draftReply to null.${knowledgePrompt}
-
-You MUST respond ONLY with a raw JSON object matching exactly this structure. 
-CRITICAL JSON RULES:
-- MUST be valid JSON.
-- Escape all double quotes inside strings using \".
-- Do NOT use raw newlines inside strings, use \n instead.
-- Do NOT wrap in markdown formatting blocks (\`\`\`json). Just the raw JSON:
-{
-  "emails": [
-    {
-      "id": "12345",
-      "subject": "The exact subject",
-      "senderName": "John Doe",
-      "senderEmail": "john@example.com",
-      "category": "Needs Reply",
-      "priority": 5,
-      "replyNeeded": true,
-      "confidenceScore": 95,
-      "summary": "John is asking for a meeting on Tuesday.",
-      "draftReply": "Tuesday works perfectly. Let's do 2 PM. Cheers"
-    }
-  ]
-}
-
-Emails to process:
-${safeBodiesText}`
-        });
-
-        const object = parseJsonResponse(text, emailResponseSchema);
-        const safeBodyMap = extractBodyMap(safeBodiesText);
-
-        for (const email of object.emails) {
-          const emailId = email.id;
-          if (!batchIds.includes(emailId)) continue;
-
-          await prisma.email.upsert({
-            where: { providerMessageId: emailId },
-            update: {
-              subject: email.subject,
-              senderName: email.senderName,
-              senderEmail: email.senderEmail,
-              category: email.category,
-              priority: email.priority,
-              replyNeeded: email.replyNeeded,
-              confidenceScore: email.confidenceScore,
-              summary: email.summary,
-              draftReply: email.draftReply,
-              originalBody: safeBodyMap.get(emailId) || null,
-            },
-            create: {
-              userId,
-              providerMessageId: emailId,
-              subject: email.subject,
-              senderName: email.senderName,
-              senderEmail: email.senderEmail,
-              category: email.category,
-              priority: email.priority,
-              replyNeeded: email.replyNeeded,
-              confidenceScore: email.confidenceScore,
-              summary: email.summary,
-              draftReply: email.draftReply,
-              originalBody: safeBodyMap.get(emailId) || null,
-            }
-          });
-          processedCount++;
-        }
+        processedCount += await processEmailBatch(mcp, batchIds, userId, globalRulesPrompt, parsedKnowledge);
       } catch (e) {
         console.error(`Failed to process batch ${Math.floor(i / 3) + 1}:`, e);
       }
