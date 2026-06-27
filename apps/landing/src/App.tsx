@@ -967,14 +967,14 @@ function App() {
                 <DotField
                     dotRadius={1.5}
                     dotSpacing={14}
-                    bulgeStrength={67}
-                    glowRadius={80}
-                    sparkle={false}
-                    waveAmplitude={4}
-                    cursorForce={0}
+                    bulgeStrength={80}
+                    glowRadius={120}
+                    sparkle={true}
+                    waveAmplitude={6}
+                    cursorForce={0.2}
                     gradientFrom="#00ffab"
-                    gradientTo="#00ffab"
-                    glowColor="rgba(0, 255, 171, 0.15)"
+                    gradientTo="#1ed43c"
+                    glowColor="rgba(0, 255, 171, 0.25)"
                 />
             </div>
             
