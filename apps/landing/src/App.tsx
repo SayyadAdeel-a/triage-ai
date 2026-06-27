@@ -364,7 +364,7 @@ function FAQ() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <section className="py-24 md:py-32 bg-black">
+        <section className="relative py-24 md:py-32">
             <div className="max-w-3xl mx-auto px-5 md:px-8">
                 <motion.div
                     initial="hidden"
@@ -538,7 +538,7 @@ function Hero() {
 
 function IntroStatement() {
     return (
-        <section id="process" className="py-24 md:py-32 px-5 md:px-8 bg-black">
+        <section id="process" className="relative py-24 md:py-32 px-5 md:px-8">
             <div className="max-w-4xl mx-auto text-center">
                 <motion.div
                     initial="hidden"
@@ -577,7 +577,7 @@ function IntroStatement() {
 
 function ProblemSection() {
     return (
-        <section id="features" className="py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a]">
+        <section id="features" className="relative py-24 md:py-32 px-5 md:px-8">
             <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial="hidden"
@@ -645,7 +645,7 @@ function ProblemSection() {
 
 function OutcomesSection() {
     return (
-        <section className="py-24 md:py-32 px-5 md:px-8 bg-black">
+        <section className="relative py-24 md:py-32 px-5 md:px-8">
             <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial="hidden"
@@ -701,7 +701,7 @@ function OutcomesSection() {
 
 function PricingSection() {
     return (
-        <section id="pricing" className="py-24 md:py-32 px-5 md:px-8 bg-[#0a0a0a]">
+        <section id="pricing" className="relative py-24 md:py-32 px-5 md:px-8">
             <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial="hidden"
@@ -775,7 +775,7 @@ function PricingSection() {
 
 function TeamSection() {
     return (
-        <section id="team" className="py-24 md:py-32 px-5 md:px-8 bg-black">
+        <section id="team" className="relative py-24 md:py-32 px-5 md:px-8">
             <div className="max-w-7xl mx-auto">
                 <motion.div
                     initial="hidden"
@@ -829,7 +829,7 @@ function CTASection() {
     const [email, setEmail] = useState('')
 
     return (
-        <section id="cta" className="py-24 md:py-32 px-5 md:px-8 bg-black">
+        <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     initial="hidden"
@@ -997,5 +997,6 @@ function App() {
 }
 
 export default App
+
 
 
