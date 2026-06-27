@@ -2,7 +2,6 @@ import React, { useEffect, useRef, memo } from 'react';
 
 import './DotField.css';
 
-const TWO_PI = Math.PI * 2;
 
 interface DotFieldProps extends React.HTMLAttributes<HTMLDivElement> {
   dotRadius?: number;
@@ -166,8 +165,6 @@ const DotField = memo(({
       const rad = p.dotRadius / 2;
       const isBulge = p.bulgeOnly;
 
-      ctx.beginPath();
-
       for (let i = 0; i < len; i++) {
         const d = dots[i];
         const dx = m.x - d.ax;
@@ -212,19 +209,14 @@ const DotField = memo(({
         if (p.sparkle) {
           const hash = ((i * 2654435761) ^ (frameCount >> 3)) >>> 0;
           if ((hash % 100) < 3) {
-            ctx.moveTo(drawX + rad * 1.8, drawY);
-            ctx.arc(drawX, drawY, rad * 1.8, 0, TWO_PI);
+            ctx.fillRect(drawX - rad * 1.8, drawY - rad * 1.8, rad * 3.6, rad * 3.6);
           } else {
-            ctx.moveTo(drawX + rad, drawY);
-            ctx.arc(drawX, drawY, rad, 0, TWO_PI);
+            ctx.fillRect(drawX - rad, drawY - rad, rad * 2, rad * 2);
           }
         } else {
-          ctx.moveTo(drawX + rad, drawY);
-          ctx.arc(drawX, drawY, rad, 0, TWO_PI);
+          ctx.fillRect(drawX - rad, drawY - rad, rad * 2, rad * 2);
         }
       }
-
-      ctx.fill();
 
       rafRef.current = requestAnimationFrame(tick);
     }

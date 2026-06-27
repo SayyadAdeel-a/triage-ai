@@ -966,7 +966,7 @@ function App() {
             <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
                 <DotField
                     dotRadius={1.5}
-                    dotSpacing={14}
+                    dotSpacing={20}
                     bulgeStrength={80}
                     glowRadius={120}
                     sparkle={false}
