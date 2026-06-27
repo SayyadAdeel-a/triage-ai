@@ -18,7 +18,6 @@ import {
 import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
-import DotField from './DotField'
 
 
 /* ------------------------------------------------------------------
@@ -440,7 +439,7 @@ function Hero() {
     const y1 = useTransform(scrollY, [0, 500], [0, 80])
 
     return (
-        <section className="relative min-h-screen bg-black flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
+        <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
             {/* Background glow */}
             <div className="absolute inset-0 pointer-events-none z-0">
                 <div className="absolute inset-0 opacity-40 mix-blend-screen">
@@ -963,21 +962,6 @@ function Footer() {
 function App() {
     return (
         <div className="relative min-h-screen bg-black">
-            <div className="fixed inset-0 pointer-events-none z-0 opacity-40">
-                <DotField
-                    dotRadius={1.5}
-                    dotSpacing={20}
-                    bulgeStrength={80}
-                    glowRadius={120}
-                    sparkle={false}
-                    waveAmplitude={6}
-                    cursorForce={0.2}
-                    gradientFrom="#00ffab"
-                    gradientTo="#1ed43c"
-                    glowColor="rgba(0, 255, 171, 0.25)"
-                />
-            </div>
-            
             <div className="relative z-10 flex flex-col min-h-screen">
                 <Navbar />
                 <main className="flex-1">
