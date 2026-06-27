@@ -70,18 +70,18 @@ struct ColorStop {
   float position;
 };
 
-#define COLOR_RAMP(colors, factor, finalColor) {              \\
-  int index = 0;                                            \\
-  for (int i = 0; i < 2; i++) {                               \\
-     ColorStop currentColor = colors[i];                    \\
-     bool isInBetween = currentColor.position <= factor;    \\
-     index = int(mix(float(index), float(i), float(isInBetween))); \\
-  }                                                         \\
-  ColorStop currentColor = colors[index];                   \\
-  ColorStop nextColor = colors[index + 1];                  \\
-  float range = nextColor.position - currentColor.position; \\
-  float lerpFactor = (factor - currentColor.position) / range; \\
-  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \\
+#define COLOR_RAMP(colors, factor, finalColor) {              \
+  int index = 0;                                            \
+  for (int i = 0; i < 2; i++) {                               \
+     ColorStop currentColor = colors[i];                    \
+     bool isInBetween = currentColor.position <= factor;    \
+     index = int(mix(float(index), float(i), float(isInBetween))); \
+  }                                                         \
+  ColorStop currentColor = colors[index];                   \
+  ColorStop nextColor = colors[index + 1];                  \
+  float range = nextColor.position - currentColor.position; \
+  float lerpFactor = (factor - currentColor.position) / range; \
+  finalColor = mix(currentColor.color, nextColor.color, lerpFactor); \
 }
 
 void main() {
@@ -109,17 +109,9 @@ void main() {
 }
 `;
 
-interface AuroraProps {
-  colorStops?: [string, string, string];
-  amplitude?: number;
-  blend?: number;
-  time?: number;
-  speed?: number;
-}
-
-export default function Aurora(props: AuroraProps) {
+export default function Aurora(props: any) {
   const { colorStops = ['#5227FF', '#7cff67', '#5227FF'], amplitude = 1.0, blend = 0.5 } = props;
-  const propsRef = useRef<AuroraProps>(props);
+  const propsRef = useRef<any>(props);
   propsRef.current = props;
 
   const ctnDom = useRef<HTMLDivElement>(null);
@@ -128,24 +120,12 @@ export default function Aurora(props: AuroraProps) {
     const ctn = ctnDom.current;
     if (!ctn) return;
 
-    let renderer: Renderer;
-    let gl: any;
-    try {
-      renderer = new Renderer({
-        alpha: true,
-        premultipliedAlpha: true,
-        antialias: true
-      });
-      gl = renderer.gl;
-      if (!gl) throw new Error('No WebGL context returned');
-    } catch (err) {
-      console.warn('Aurora component: WebGL context could not be created. Falling back to CSS animation.', err);
-      if (ctn) {
-        ctn.classList.add('aurora-fallback');
-      }
-      return;
-    }
-    
+    const renderer = new Renderer({
+      alpha: true,
+      premultipliedAlpha: true,
+      antialias: true
+    });
+    const gl = renderer.gl;
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
