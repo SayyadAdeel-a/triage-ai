@@ -16,6 +16,7 @@ import {
     ChevronRight
 } from 'lucide-react'
 import BorderGlow from './BorderGlow'
+import SpotlightCard from './SpotlightCard'
 
 
 /* ------------------------------------------------------------------
@@ -215,7 +216,7 @@ function FeatureCard({ icon, title, description, stat, statLabel, visual, delay 
                 animated={false}
                 colors={['#c084fc', '#f472b6', '#38bdf8']}
             >
-                <div className="overflow-hidden card-surface w-full h-full rounded-[24px] relative z-10 p-6 md:p-7 hover:border-[#333] transition-colors duration-300">
+                <SpotlightCard className="overflow-hidden card-surface w-full h-full rounded-[24px] relative z-10 p-6 md:p-7 hover:border-[#333] transition-colors duration-300" spotlightColor="rgba(0, 255, 171, 0.15)">
                     <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="relative z-10">
                         <div className="mb-5">
@@ -240,7 +241,7 @@ function FeatureCard({ icon, title, description, stat, statLabel, visual, delay 
                         <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
                         <p className="text-sm leading-relaxed text-[#eeeded]/60">{description}</p>
                     </div>
-                </div>
+                </SpotlightCard>
             </BorderGlow>
         </motion.div>
     )
@@ -251,42 +252,44 @@ function PricingTier({ name, price, description, features, highlighted, delay = 
         <motion.div
             variants={fadeUp}
             custom={delay}
-            className={`relative rounded-[28px] p-7 flex flex-col h-full transition-all duration-300 ${highlighted
+            className="group relative h-full"
+        >
+            <SpotlightCard className={`w-full h-full relative rounded-[28px] p-7 flex flex-col transition-all duration-300 ${highlighted
                     ? 'bg-gradient-to-b from-[#00ffab]/10 to-[#0a0a0a] border border-[#00ffab]/30 glow-mint'
                     : 'card-surface hover:border-[#333]'
-                }`}
-        >
-            <div className="mb-6">
-                <span className="text-xs font-medium tracking-[0.12em] uppercase text-[#eeeded]/50">
-                    {name}
-                </span>
-                <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-4xl md:text-5xl font-semibold text-white">{price}</span>
+                }`} spotlightColor="rgba(0, 255, 171, 0.15)">
+                <div className="mb-6">
+                    <span className="text-xs font-medium tracking-[0.12em] uppercase text-[#eeeded]/50">
+                        {name}
+                    </span>
+                    <div className="mt-3 flex items-baseline gap-1">
+                        <span className="text-4xl md:text-5xl font-semibold text-white">{price}</span>
+                    </div>
+                    <p className="mt-2 text-sm text-[#eeeded]/60 leading-relaxed">{description}</p>
                 </div>
-                <p className="mt-2 text-sm text-[#eeeded]/60 leading-relaxed">{description}</p>
-            </div>
 
-            <a
-                href="#cta"
-                className={`w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-200 mb-6 ${highlighted
-                        ? 'bg-[#00ffab] text-[#0a0a0a] hover:bg-[#00e69d] btn-primary-shadow'
-                        : 'bg-white/5 text-white border border-[#333] hover:bg-white/10'
-                    }`}
-            >
-                Get Started
-                <ArrowRight size={14} strokeWidth={2.5} />
-            </a>
+                <a
+                    href="#cta"
+                    className={`w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-sm font-semibold transition-all duration-200 mb-6 ${highlighted
+                            ? 'bg-[#00ffab] text-[#0a0a0a] hover:bg-[#00e69d] btn-primary-shadow'
+                            : 'bg-white/5 text-white border border-[#333] hover:bg-white/10'
+                        }`}
+                >
+                    Get Started
+                    <ArrowRight size={14} strokeWidth={2.5} />
+                </a>
 
-            <ul className="space-y-3 mt-auto">
-                {features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-[#eeeded]/70">
-                        <div className="mt-0.5 w-5 h-5 rounded-full bg-[#00ffab]/10 flex items-center justify-center flex-shrink-0">
-                            <Check size={12} className="text-[#00ffab]" />
-                        </div>
-                        {feature}
-                    </li>
-                ))}
-            </ul>
+                <ul className="space-y-3 mt-auto">
+                    {features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-3 text-sm text-[#eeeded]/70">
+                            <div className="mt-0.5 w-5 h-5 rounded-full bg-[#00ffab]/10 flex items-center justify-center flex-shrink-0">
+                                <Check size={12} className="text-[#00ffab]" />
+                            </div>
+                            {feature}
+                        </li>
+                    ))}
+                </ul>
+            </SpotlightCard>
         </motion.div>
     )
 }
@@ -310,7 +313,7 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
                 animated={false}
                 colors={['#c084fc', '#f472b6', '#38bdf8']}
             >
-                <div className="overflow-hidden card-surface w-full h-full rounded-[28px] relative z-10">
+                <SpotlightCard className="overflow-hidden card-surface w-full h-full rounded-[28px] relative z-10" spotlightColor="rgba(0, 255, 171, 0.15)">
                     <div className="aspect-[3/4] overflow-hidden">
                         <img
                             src={image}
@@ -330,7 +333,7 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
                             </div>
                         </div>
                     </div>
-                </div>
+                </SpotlightCard>
             </BorderGlow>
         </motion.div>
     )
@@ -840,7 +843,7 @@ function CTASection() {
                         animated={false}
                         colors={['#c084fc', '#f472b6', '#38bdf8']}
                     >
-                        <div className="overflow-hidden card-surface p-10 md:p-16 text-center w-full h-full rounded-[40px] relative z-10">
+                        <SpotlightCard className="overflow-hidden card-surface p-10 md:p-16 text-center w-full h-full rounded-[40px] relative z-10" spotlightColor="rgba(0, 255, 171, 0.15)">
                             <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent pointer-events-none" />
                             <div className="relative z-10">
                                 <SectionLabel>Get Started</SectionLabel>
@@ -879,7 +882,7 @@ function CTASection() {
                                     </button>
                                 </form>
                             </div>
-                        </div>
+                        </SpotlightCard>
                     </BorderGlow>
                 </motion.div>
             </div>
