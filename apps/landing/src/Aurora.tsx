@@ -119,13 +119,24 @@ export default function Aurora(props: any) {
   useEffect(() => {
     const ctn = ctnDom.current;
     if (!ctn) return;
-
-    const renderer = new Renderer({
-      alpha: true,
-      premultipliedAlpha: true,
-      antialias: true
-    });
-    const gl = renderer.gl;
+    let renderer: Renderer;
+    let gl: any;
+    try {
+      renderer = new Renderer({
+        alpha: true,
+        premultipliedAlpha: true,
+        antialias: true
+      });
+      gl = renderer.gl;
+      if (!gl) throw new Error('No WebGL context returned');
+    } catch (err) {
+      console.warn('Aurora component: WebGL context could not be created. Falling back to CSS animation.', err);
+      if (ctn) {
+        ctn.classList.add('aurora-fallback');
+      }
+      return;
+    }
+    
     gl.clearColor(0, 0, 0, 0);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
