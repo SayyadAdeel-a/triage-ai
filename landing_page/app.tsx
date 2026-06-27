@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, useScroll, useTransform, type Variants } from 'framer-motion'
+import { BorderGlow } from './BorderGlow'
 import {
     Zap,
     Clock,
@@ -199,32 +200,47 @@ function FeatureCard({ icon, title, description, stat, statLabel, visual, delay 
         <motion.div
             variants={fadeUp}
             custom={delay}
-            className="group relative rounded-[24px] card-surface p-6 md:p-7 hover:border-[#333] transition-colors duration-300 overflow-hidden"
+            className="group relative"
         >
-            <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="relative z-10">
-                <div className="mb-5">
-                    <div className="w-11 h-11 rounded-xl bg-[#00ffab]/10 border border-[#00ffab]/20 flex items-center justify-center text-[#00ffab]">
-                        {icon}
+            <BorderGlow
+                className="w-full h-full"
+                edgeSensitivity={30}
+                glowColor="40 80 80"
+                backgroundColor="#120F17"
+                borderRadius={28}
+                glowRadius={40}
+                glowIntensity={1.0}
+                coneSpread={25}
+                animated={false}
+                colors={['#c084fc', '#f472b6', '#38bdf8']}
+            >
+                <div className="card-surface p-6 md:p-7 hover:border-[#333] transition-colors duration-300 overflow-hidden relative z-10 h-full">
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative z-10">
+                        <div className="mb-5">
+                            <div className="w-11 h-11 rounded-xl bg-[#00ffab]/10 border border-[#00ffab]/20 flex items-center justify-center text-[#00ffab]">
+                                {icon}
+                            </div>
+                        </div>
+
+                        {visual && <div className="mb-5">{visual}</div>}
+
+                        {stat && (
+                            <div className="mb-3">
+                                <span className="text-2xl font-semibold text-white">{stat}</span>
+                                {statLabel && (
+                                    <span className="ml-2 text-xs text-[#eeeded]/50 uppercase tracking-wider">
+                                        {statLabel}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+                        <p className="text-sm leading-relaxed text-[#eeeded]/60">{description}</p>
                     </div>
                 </div>
-
-                {visual && <div className="mb-5">{visual}</div>}
-
-                {stat && (
-                    <div className="mb-3">
-                        <span className="text-2xl font-semibold text-white">{stat}</span>
-                        {statLabel && (
-                            <span className="ml-2 text-xs text-[#eeeded]/50 uppercase tracking-wider">
-                                {statLabel}
-                            </span>
-                        )}
-                    </div>
-                )}
-
-                <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-                <p className="text-sm leading-relaxed text-[#eeeded]/60">{description}</p>
-            </div>
+            </BorderGlow>
         </motion.div>
     )
 }
@@ -356,27 +372,42 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
         <motion.div
             variants={fadeUp}
             custom={delay}
-            className="group relative rounded-[28px] overflow-hidden card-surface"
+            className="group relative"
         >
-            <div className="aspect-[3/4] overflow-hidden">
-                <img
-                    src={image}
-                    alt={`${name}, ${role}`}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                />
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
-                <div className="flex items-end justify-between">
-                    <div>
-                        <h3 className="text-base font-semibold text-white">{name}</h3>
-                        <p className="text-sm text-[#eeeded]/60">{role}</p>
+            <BorderGlow
+                className="w-full h-full"
+                edgeSensitivity={30}
+                glowColor="40 80 80"
+                backgroundColor="#120F17"
+                borderRadius={28}
+                glowRadius={40}
+                glowIntensity={1.0}
+                coneSpread={25}
+                animated={false}
+                colors={['#c084fc', '#f472b6', '#38bdf8']}
+            >
+                <div className="overflow-hidden card-surface w-full h-full rounded-[28px] relative z-10">
+                    <div className="aspect-[3/4] overflow-hidden">
+                        <img
+                            src={image}
+                            alt={`${name}, ${role}`}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy"
+                        />
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-[#00ffab] flex items-center justify-center text-[#0a0a0a]">
-                        <ArrowRight size={14} strokeWidth={2.5} />
+                    <div className="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/90 via-black/50 to-transparent">
+                        <div className="flex items-end justify-between">
+                            <div>
+                                <h3 className="text-base font-semibold text-white">{name}</h3>
+                                <p className="text-sm text-[#eeeded]/60">{role}</p>
+                            </div>
+                            <div className="w-8 h-8 rounded-full bg-[#00ffab] flex items-center justify-center text-[#0a0a0a]">
+                                <ArrowRight size={14} strokeWidth={2.5} />
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </BorderGlow>
         </motion.div>
     )
 }
@@ -873,48 +904,63 @@ function CTASection() {
                     whileInView="visible"
                     viewport={{ once: true, margin: '-100px' }}
                     variants={scaleIn}
-                    className="relative rounded-[40px] overflow-hidden card-surface p-10 md:p-16 text-center"
+                    className="relative"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent pointer-events-none" />
-                    <div className="relative z-10">
-                        <SectionLabel>Get Started</SectionLabel>
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                            Ready to deploy
-                            <br />
-                            <span className="gradient-text">secure AI infrastructure?</span>
-                        </h2>
-                        <p className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10 max-w-xl mx-auto">
-                            Book a discovery call and get started in weeks, not months.
-                        </p>
+                    <BorderGlow
+                        className="w-full h-full"
+                        edgeSensitivity={30}
+                        glowColor="40 80 80"
+                        backgroundColor="#120F17"
+                        borderRadius={40}
+                        glowRadius={40}
+                        glowIntensity={1.0}
+                        coneSpread={25}
+                        animated={false}
+                        colors={['#c084fc', '#f472b6', '#38bdf8']}
+                    >
+                        <div className="overflow-hidden card-surface p-10 md:p-16 text-center w-full h-full rounded-[40px] relative z-10">
+                            <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent pointer-events-none" />
+                            <div className="relative z-10">
+                                <SectionLabel>Get Started</SectionLabel>
+                                <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
+                                    Ready to deploy
+                                    <br />
+                                    <span className="gradient-text">secure AI infrastructure?</span>
+                                </h2>
+                                <p className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10 max-w-xl mx-auto">
+                                    Book a discovery call and get started in weeks, not months.
+                                </p>
 
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault()
-                                alert(`Thanks! We'll reach out at ${email}`)
-                            }}
-                            className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
-                        >
-                            <label htmlFor="cta-email" className="sr-only">
-                                Email address
-                            </label>
-                            <input
-                                id="cta-email"
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Enter your email"
-                                className="w-full sm:flex-1 px-5 py-3.5 rounded-full bg-[#0a0a0a] border border-[#333] text-white text-sm placeholder:text-[#eeeded]/40 focus:border-[#00ffab]/50 focus:outline-none transition-colors"
-                            />
-                            <button
-                                type="submit"
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
-                            >
-                                Book Discovery Call
-                                <ArrowRight size={16} strokeWidth={2.5} />
-                            </button>
-                        </form>
-                    </div>
+                                <form
+                                    onSubmit={(e) => {
+                                        e.preventDefault()
+                                        alert(`Thanks! We'll reach out at ${email}`)
+                                    }}
+                                    className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
+                                >
+                                    <label htmlFor="cta-email" className="sr-only">
+                                        Email address
+                                    </label>
+                                    <input
+                                        id="cta-email"
+                                        type="email"
+                                        required
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        placeholder="Enter your email"
+                                        className="w-full sm:flex-1 px-5 py-3.5 rounded-full bg-[#0a0a0a] border border-[#333] text-white text-sm placeholder:text-[#eeeded]/40 focus:border-[#00ffab]/50 focus:outline-none transition-colors"
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
+                                    >
+                                        Book Discovery Call
+                                        <ArrowRight size={16} strokeWidth={2.5} />
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </BorderGlow>
                 </motion.div>
             </div>
         </section>
