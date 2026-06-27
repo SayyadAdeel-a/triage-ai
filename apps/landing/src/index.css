@@ -1,5 +1,12 @@
 @import "tailwindcss";
-@import "tailwindcss";
+
+@theme {
+  --color-background: var(--color-surface-base);
+  --color-foreground: var(--color-text-primary);
+  --color-primary: var(--color-surface-muted);
+  --color-border: var(--color-border-subtle);
+  --color-muted: #1a1a1a;
+}
 
 :root {
     --font-primary: 'Inter', system-ui, sans-serif;

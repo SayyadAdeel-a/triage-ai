@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, useScroll, useTransform, type Variants } from 'framer-motion'
 import {
     Zap,
@@ -11,13 +11,16 @@ import {
     Check,
     ArrowRight,
     Play,
-    Menu,
-    X,
-    ChevronRight
+    ChevronRight,
+    Shield,
+    Cog,
+    Banknote,
+    Users
 } from 'lucide-react'
 import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
+import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
 
 
 /* ------------------------------------------------------------------
@@ -82,102 +85,14 @@ const scaleIn: Variants = {
    Components
    ------------------------------------------------------------------ */
 function Navbar() {
-    const [mobileOpen, setMobileOpen] = useState(false)
-    const [scrolled, setScrolled] = useState(false)
-
-    useEffect(() => {
-        const onScroll = () => setScrolled(window.scrollY > 20)
-        window.addEventListener('scroll', onScroll)
-        return () => window.removeEventListener('scroll', onScroll)
-    }, [])
-
-    const links = [
-        { label: 'Security', href: '#security' },
-        { label: 'Process', href: '#process' },
-        { label: 'Pricing', href: '#pricing' },
-        { label: 'Team', href: '#team' }
+    const navItems = [
+        { name: 'Security', url: '#security', icon: Shield },
+        { name: 'Process', url: '#process', icon: Cog },
+        { name: 'Pricing', url: '#pricing', icon: Banknote },
+        { name: 'Team', url: '#team', icon: Users }
     ]
 
-    return (
-        <nav
-            className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-                    ? 'bg-black/80 backdrop-blur-xl border-b border-[#1a1a1a]'
-                    : 'bg-transparent'
-                }`}
-        >
-            <div className="max-w-7xl mx-auto px-5 md:px-8">
-                <div className="flex items-center justify-between h-16 md:h-20">
-                    <a
-                        href="#"
-                        className="text-[#eeeded] font-semibold tracking-[0.12em] text-sm uppercase hover:text-white transition-colors"
-                    >
-                        TriageAI
-                    </a>
-
-                    <div className="hidden md:flex items-center gap-8">
-                        {links.map((link) => (
-                            <a
-                                key={link.label}
-                                href={link.href}
-                                className="text-sm text-[#eeeded]/70 hover:text-white transition-colors duration-200"
-                            >
-                                {link.label}
-                            </a>
-                        ))}
-                    </div>
-
-                    <div className="hidden md:block">
-                        <a
-                            href="#cta"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-colors duration-200 btn-primary-shadow"
-                        >
-                            Start for free
-                            <ArrowRight size={14} strokeWidth={2.5} />
-                        </a>
-                    </div>
-
-                    <button
-                        className="md:hidden text-[#eeeded] p-2 rounded-lg hover:bg-white/5 transition-colors"
-                        onClick={() => setMobileOpen(!mobileOpen)}
-                        aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-                        aria-expanded={mobileOpen}
-                    >
-                        {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-                    </button>
-                </div>
-            </div>
-
-            {mobileOpen && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="md:hidden bg-black/95 backdrop-blur-xl border-b border-[#1a1a1a]"
-                >
-                    <div className="px-5 py-5 flex flex-col gap-4">
-                        {links.map((link) => (
-                            <a
-                                key={link.label}
-                                href={link.href}
-                                onClick={() => setMobileOpen(false)}
-                                className="text-base text-[#eeeded]/80 hover:text-white py-2"
-                            >
-                                {link.label}
-                            </a>
-                        ))}
-                        <a
-                            href="#cta"
-                            onClick={() => setMobileOpen(false)}
-                            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold mt-2"
-                        >
-                            Start for free
-                            <ArrowRight size={14} strokeWidth={2.5} />
-                        </a>
-                    </div>
-                </motion.div>
-            )}
-        </nav>
-    )
+    return <TubelightNavbar items={navItems} />
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
