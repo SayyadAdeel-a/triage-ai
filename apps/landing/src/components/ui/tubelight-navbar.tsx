@@ -20,13 +20,34 @@ export function NavBar({ items, className }: NavBarProps) {
   const [activeTab, setActiveTab] = useState(items[0].name)
 
   useEffect(() => {
-    const handleResize = () => {
+    const handleScroll = () => {
+      let current = ""
+      const scrollPosition = window.scrollY + window.innerHeight / 3 // Offset for earlier triggering
+
+      items.forEach((item) => {
+        if (item.url.startsWith("#")) {
+          const sectionId = item.url.substring(1)
+          const section = document.getElementById(sectionId)
+          if (section) {
+            const sectionTop = section.offsetTop
+            const sectionHeight = section.offsetHeight
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+              current = item.name
+            }
+          }
+        }
+      })
+
+      if (current) {
+        setActiveTab(prev => prev !== current ? current : prev)
+      }
     }
 
-    handleResize()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    window.addEventListener("scroll", handleScroll)
+    // Initial check
+    handleScroll()
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [items])
 
   return (
     <div
