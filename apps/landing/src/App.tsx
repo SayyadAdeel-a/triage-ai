@@ -429,18 +429,33 @@ function IntroStatement() {
                         variants={fadeUp}
                         className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-8"
                     >
-                        <div className="relative w-full h-[100px] md:h-[150px]">
-                            <TextPressure 
-                                text="Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow."
-                                flex={true}
-                                alpha={false}
-                                stroke={false}
-                                width={true}
-                                weight={true}
-                                italic={true}
-                                textColor="#ffffff"
-                                minFontSize={24}
-                            />
+                        <div className="relative w-full flex flex-col gap-2 md:gap-4 h-[120px] md:h-[180px]">
+                            <div className="relative w-full h-1/2">
+                                <TextPressure 
+                                    text="Seamlessly integrates with Gmail, Outlook,"
+                                    flex={true}
+                                    alpha={false}
+                                    stroke={false}
+                                    width={true}
+                                    weight={true}
+                                    italic={true}
+                                    textColor="#ffffff"
+                                    minFontSize={24}
+                                />
+                            </div>
+                            <div className="relative w-full h-1/2">
+                                <TextPressure 
+                                    text="LinkedIn, Slack, and Notion to unify your workflow."
+                                    flex={true}
+                                    alpha={false}
+                                    stroke={false}
+                                    width={true}
+                                    weight={true}
+                                    italic={true}
+                                    textColor="#ffffff"
+                                    minFontSize={24}
+                                />
+                            </div>
                         </div>
                     </motion.div>
 
