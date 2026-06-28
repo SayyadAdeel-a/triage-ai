@@ -16,6 +16,8 @@ import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
 import MagicBento, { ParticleCard } from './components/ui/MagicBento'
 import GradientText from './components/ui/GradientText'
+import MagnetLines from './components/ui/MagnetLines'
+import BlurText from './components/ui/BlurText'
 
 
 /* ------------------------------------------------------------------
@@ -516,8 +518,11 @@ const outcomesFeatures = [
 
 function OutcomesSection() {
     return (
-        <section className="relative py-24 md:py-32 px-5 md:px-8">
-            <div className="max-w-7xl mx-auto">
+        <section className="relative py-24 md:py-32 px-5 md:px-8 overflow-hidden">
+            <div className="absolute inset-0 z-0 opacity-20 pointer-events-auto">
+                <MagnetLines rows={9} columns={15} containerSize="100%" lineColor="#00ffab" lineWidth="3px" lineHeight="20px" baseAngle={0} />
+            </div>
+            <div className="max-w-7xl mx-auto relative z-10 pointer-events-none [&_div]:pointer-events-auto">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -719,8 +724,8 @@ function CTASection() {
                             <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent pointer-events-none" />
                             <div className="relative z-10">
                                 <SectionLabel>Get Started</SectionLabel>
-                                <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5">
-                                    Ready to take back control of your inbox?
+                                <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5 flex justify-center flex-wrap">
+                                    <BlurText text="Ready to take back control of your inbox?" delay={50} animateBy="words" direction="bottom" />
                                 </h2>
                                 <p className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10 max-w-xl mx-auto">
                                     Join thousands of executives saving 10+ hours a week.

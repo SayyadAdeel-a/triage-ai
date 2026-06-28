@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { gsap } from 'gsap';
+import DecryptedText from './DecryptedText';
 import './MagicBento.css';
 
 const DEFAULT_PARTICLE_COUNT = 12;
@@ -497,7 +498,7 @@ const MagicBento = ({
                   <div className="magic-bento-card__label" style={{ color: `rgb(${glowColor})`, fontWeight: '600' }}>{card.label}</div>
                 </div>
                 <div className="magic-bento-card__content">
-                  <h2 className="magic-bento-card__title">{card.title}</h2>
+                  <h2 className="magic-bento-card__title"><DecryptedText text={card.title} speed={70} maxIterations={15} animateOn="view" revealDirection="start" /></h2>
                   <p className="magic-bento-card__description">{card.description}</p>
                 </div>
               </ParticleCard>
@@ -620,7 +621,7 @@ const MagicBento = ({
                 <div className="magic-bento-card__label" style={{ color: `rgb(${glowColor})`, fontWeight: '600' }}>{card.label}</div>
               </div>
               <div className="magic-bento-card__content">
-                <h2 className="magic-bento-card__title">{card.title}</h2>
+                <h2 className="magic-bento-card__title"><DecryptedText text={card.title} speed={70} maxIterations={15} animateOn="view" revealDirection="start" /></h2>
                 <p className="magic-bento-card__description">{card.description}</p>
               </div>
             </div>
