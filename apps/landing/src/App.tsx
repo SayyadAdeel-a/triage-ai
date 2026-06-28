@@ -692,7 +692,7 @@ function CTASection() {
 
     return (
         <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8 border-t border-[#1a1a1a] overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none opacity-30 z-0 h-full w-full">
+            <div className="absolute inset-0 pointer-events-none opacity-30 z-0 h-full w-full rotate-180">
                 <Aurora colorStops={["#c084fc", "#00ffab", "#f472b6"]} blend={0.6} amplitude={1.2} speed={0.5} />
             </div>
             <div className="relative z-10 max-w-4xl mx-auto">
