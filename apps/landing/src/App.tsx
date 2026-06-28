@@ -8,7 +8,8 @@ import {
     ChevronRight,
     Cog,
     Banknote,
-    Users
+    Users,
+    Home
 } from 'lucide-react'
 import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
@@ -75,6 +76,7 @@ const scaleIn: Variants = {
    ------------------------------------------------------------------ */
 function Navbar() {
     const navItems = [
+        { name: 'Home', url: '#home', icon: Home },
         { name: 'Process', url: '#process', icon: Cog },
         { name: 'Features', url: '#features', icon: Zap },
         { name: 'Pricing', url: '#pricing', icon: Banknote },
@@ -318,7 +320,7 @@ function Hero() {
     const y1 = useTransform(scrollY, [0, 500], [0, 80])
 
     return (
-        <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
+        <section id="home" className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-16 px-5 md:px-8 overflow-hidden">
             {/* Background glow */}
             <div className="absolute inset-0 pointer-events-none z-0">
                 <div className="absolute inset-0 opacity-40 mix-blend-screen">
