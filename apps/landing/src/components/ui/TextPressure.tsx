@@ -224,7 +224,7 @@ const TextPressure: React.FC<TextPressureProps> = ({
             data-char={char}
             className="inline-block"
           >
-            {char}
+            {char === ' ' ? '\u00A0' : char}
           </span>
         ))}
       </h1>
