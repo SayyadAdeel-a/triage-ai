@@ -8,44 +8,12 @@ const DEFAULT_SPOTLIGHT_RADIUS = 300;
 const DEFAULT_GLOW_COLOR = '0, 255, 171';
 const MOBILE_BREAKPOINT = 768;
 
-const cardData = [
-  {
-    color: '#111111',
-    title: 'Smart Categorization',
-    description: 'Instantly routes incoming emails into actionable, high-priority folders.',
-    label: 'Categorization'
-  },
-  {
-    color: '#111111',
-    title: 'Autonomous Drafting',
-    description: 'Pre-writes highly accurate replies based on your past email history so you only have to review and send.',
-    label: 'Drafting'
-  },
-  {
-    color: '#111111',
-    title: 'Custom Knowledge Base',
-    description: 'Upload documents to train the AI on how to answer specific business questions and automatically generate accurate responses.',
-    label: 'Training'
-  },
-  {
-    color: '#111111',
-    title: 'Autopilot Mode',
-    description: 'Runs 24/7 in the background so you wake up to a perfectly clean inbox.',
-    label: 'Automation'
-  },
-  {
-    color: '#111111',
-    title: 'Bulk Actions',
-    description: 'Archive or delete entire categories of useless emails with a single click.',
-    label: 'Actions'
-  },
-  {
-    color: '#111111',
-    title: 'Local Processing',
-    description: 'Uses local models and secure APIs to keep your private data entirely on your machine. Your data never leaves your environment.',
-    label: 'Security'
-  }
-];
+export interface MagicBentoCardProps {
+  color: string;
+  title: string;
+  description: string;
+  label: string;
+}
 
 const createParticleElement = (x: number, y: number, color = DEFAULT_GLOW_COLOR) => {
   const el = document.createElement('div');
@@ -472,6 +440,7 @@ const useMobileDetection = () => {
 };
 
 const MagicBento = ({
+  cards = [],
   textAutoHide = true,
   enableStars = true,
   enableSpotlight = true,
@@ -501,7 +470,7 @@ const MagicBento = ({
       )}
 
       <BentoCardGrid gridRef={gridRef}>
-        {cardData.map((card, index) => {
+        {cards.map((card: MagicBentoCardProps, index: number) => {
           const baseClassName = `magic-bento-card ${textAutoHide ? 'magic-bento-card--text-autohide' : ''} ${enableBorderGlow ? 'magic-bento-card--border-glow' : ''}`;
           const cardProps = {
             className: baseClassName,

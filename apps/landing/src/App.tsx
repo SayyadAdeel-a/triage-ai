@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { motion, useScroll, useTransform, type Variants } from 'framer-motion'
 import {
     Zap,
-    Clock,
-    Puzzle,
     Check,
     ArrowRight,
     Play,
@@ -22,15 +20,7 @@ import MagicBento from './components/ui/MagicBento'
 /* ------------------------------------------------------------------
    Types
    ------------------------------------------------------------------ */
-interface FeatureCardProps {
-    icon: React.ReactNode
-    title: string
-    description: string
-    stat?: string
-    statLabel?: string
-    visual?: React.ReactNode
-    delay?: number
-}
+
 
 interface PricingTierProps {
     name: string
@@ -128,55 +118,7 @@ function SectionHeading({ children, className = '' }: { children: React.ReactNod
     )
 }
 
-function FeatureCard({ icon, title, description, stat, statLabel, visual, delay = 0 }: FeatureCardProps) {
-    return (
-        <motion.div
-            variants={fadeUp}
-            custom={delay}
-            className="group relative"
-        >
-            <BorderGlow
-                className="w-full h-full"
-                edgeSensitivity={60}
-                glowColor="40 80 80"
-                backgroundColor="#120F17"
-                borderRadius={24}
-                glowRadius={120}
-                glowIntensity={2.5}
-                coneSpread={25}
-                animated={false}
-                colors={['#c084fc', '#f472b6', '#38bdf8']}
-            >
-                <SpotlightCard className="overflow-hidden card-surface w-full h-full rounded-[24px] relative z-10 p-6 md:p-7 hover:border-[#333] transition-colors duration-300" spotlightColor="rgba(0, 255, 171, 0.15)">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative z-10">
-                        <div className="mb-5">
-                            <div className="w-11 h-11 rounded-xl bg-[#00ffab]/10 border border-[#00ffab]/20 flex items-center justify-center text-[#00ffab]">
-                                {icon}
-                            </div>
-                        </div>
 
-                        {visual && <div className="mb-5">{visual}</div>}
-
-                        {stat && (
-                            <div className="mb-3">
-                                <span className="text-2xl font-semibold text-white">{stat}</span>
-                                {statLabel && (
-                                    <span className="ml-2 text-xs text-[#eeeded]/50 uppercase tracking-wider">
-                                        {statLabel}
-                                    </span>
-                                )}
-                            </div>
-                        )}
-
-                        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-                        <p className="text-sm leading-relaxed text-[#eeeded]/60">{description}</p>
-                    </div>
-                </SpotlightCard>
-            </BorderGlow>
-        </motion.div>
-    )
-}
 
 function PricingTier({ name, price, description, features, highlighted, delay = 0 }: PricingTierProps) {
     return (
@@ -547,6 +489,12 @@ function ProblemSection() {
     )
 }
 
+const outcomesFeatures = [
+    { color: '#111111', title: '10 Hours Saved', description: 'Per team, per department. Automated workflows.', label: '10 Hours' },
+    { color: '#111111', title: '24/7 Operations', description: 'AI agents working around the clock.', label: '24/7' },
+    { color: '#111111', title: '50+ Integrations', description: 'Connect across all your platforms.', label: '50+' }
+];
+
 function OutcomesSection() {
     return (
         <section className="relative py-24 md:py-32 px-5 md:px-8">
@@ -573,29 +521,19 @@ function OutcomesSection() {
                     whileInView="visible"
                     viewport={{ once: true, margin: '-50px' }}
                     variants={staggerContainer}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-5"
                 >
-                    <FeatureCard
-                        icon={<Clock size={20} />}
-                        title="10 Hours Saved"
-                        description="Per team, per department. Automated workflows."
-                        stat="10"
-                        statLabel="Hours"
-                        delay={0}
-                    />
-                    <FeatureCard
-                        icon={<Zap size={20} />}
-                        title="24/7 Operations"
-                        description="AI agents working around the clock."
-                        stat="24/7"
-                        delay={0.1}
-                    />
-                    <FeatureCard
-                        icon={<Puzzle size={20} />}
-                        title="50+ Integrations"
-                        description="Connect across all your platforms."
-                        stat="50+"
-                        delay={0.2}
+                    <MagicBento 
+                        cards={outcomesFeatures}
+                        textAutoHide={false}
+                        enableStars={true}
+                        enableSpotlight={true}
+                        enableBorderGlow={true}
+                        enableTilt={true}
+                        enableMagnetism={true}
+                        clickEffect={true}
+                        spotlightRadius={300}
+                        particleCount={12}
+                        glowColor="0, 255, 171"
                     />
                 </motion.div>
             </div>
