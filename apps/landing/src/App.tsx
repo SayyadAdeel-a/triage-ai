@@ -16,7 +16,6 @@ import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
 import MagicBento, { ParticleCard } from './components/ui/MagicBento'
 import GradientText from './components/ui/GradientText'
-import TextPressure from './components/ui/TextPressure'
 
 
 /* ------------------------------------------------------------------
@@ -425,39 +424,14 @@ function IntroStatement() {
                     viewport={{ once: true, margin: '-100px' }}
                     variants={staggerContainer}
                 >
-                    <motion.div
+                    <motion.h2
                         variants={fadeUp}
                         className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-8"
                     >
-                        <div className="relative w-full flex flex-col gap-2 md:gap-4 h-[120px] md:h-[180px]">
-                            <div className="relative w-full h-1/2">
-                                <TextPressure 
-                                    text="Seamlessly integrates with Gmail, Outlook,"
-                                    flex={true}
-                                    alpha={false}
-                                    stroke={false}
-                                    width={true}
-                                    weight={true}
-                                    italic={true}
-                                    textColor="#ffffff"
-                                    minFontSize={24}
-                                />
-                            </div>
-                            <div className="relative w-full h-1/2">
-                                <TextPressure 
-                                    text="LinkedIn, Slack, and Notion to unify your workflow."
-                                    flex={true}
-                                    alpha={false}
-                                    stroke={false}
-                                    width={true}
-                                    weight={true}
-                                    italic={true}
-                                    textColor="#ffffff"
-                                    minFontSize={24}
-                                />
-                            </div>
-                        </div>
-                    </motion.div>
+                        <GradientText colors={["#40ffaa", "#4079ff", "#40ffaa"]} animationSpeed={4} showBorder={false} className="inline-block">
+                            Seamlessly integrates with Gmail, Outlook,<br />LinkedIn, Slack, and Notion to unify your workflow.
+                        </GradientText>
+                    </motion.h2>
 
                     <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a
