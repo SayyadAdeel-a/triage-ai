@@ -15,7 +15,10 @@ import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
 import MagicBento, { ParticleCard } from './components/ui/MagicBento'
-
+import BlurText from './components/ui/BlurText'
+import TrueFocus from './components/ui/TrueFocus'
+import StarBorder from './components/ui/StarBorder'
+import Hyperspeed from './components/ui/Hyperspeed'
 
 /* ------------------------------------------------------------------
    Types
@@ -337,12 +340,13 @@ function Hero() {
                         </span>
                     </motion.div>
 
-                    <motion.h1
-                        variants={fadeUp}
+                    <BlurText
+                        text="Take back control. Your AI executive assistant."
                         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.05] mb-6"
-                    >
-                        Take back control.<br /><span className="gradient-text">Your AI executive assistant.</span>
-                    </motion.h1>
+                        delay={50}
+                        animateBy="words"
+                        direction="top"
+                    />
 
                     <motion.p
                         variants={fadeUp}
@@ -355,12 +359,18 @@ function Hero() {
                         variants={fadeUp}
                         className="flex flex-col sm:flex-row items-center justify-center gap-4"
                     >
-                        <a
-                            href="#cta"
-                            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
-                        >
-                            Start for free
-                            <ArrowRight size={16} strokeWidth={2.5} />
+                        <a href="#cta" className="inline-block">
+                            <StarBorder
+                                as="button"
+                                className="px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow whitespace-nowrap"
+                                color="#00ffab"
+                                speed="3s"
+                            >
+                                <span className="flex items-center gap-2">
+                                    Start for free
+                                    <ArrowRight size={16} strokeWidth={2.5} />
+                                </span>
+                            </StarBorder>
                         </a>
                         <a
                             href="#process"
@@ -421,20 +431,32 @@ function IntroStatement() {
                     viewport={{ once: true, margin: '-100px' }}
                     variants={staggerContainer}
                 >
-                    <motion.h2
-                        variants={fadeUp}
-                        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-8"
-                    >
-                        Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow.
-                    </motion.h2>
+                    <div className="mb-8">
+                        <TrueFocus 
+                            sentence="Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow."
+                            manualMode={false}
+                            blurAmount={4}
+                            borderColor="#00ffab"
+                            glowColor="rgba(0, 255, 171, 0.6)"
+                            animationDuration={1}
+                            pauseBetweenAnimations={0.5}
+                            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15]"
+                        />
+                    </div>
 
                     <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <a
-                            href="#cta"
-                            className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
-                        >
-                            Start for free
-                            <ArrowRight size={16} strokeWidth={2.5} />
+                        <a href="#cta" className="inline-block">
+                            <StarBorder
+                                as="button"
+                                className="px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow whitespace-nowrap"
+                                color="#00ffab"
+                                speed="3s"
+                            >
+                                <span className="flex items-center gap-2">
+                                    Start for free
+                                    <ArrowRight size={16} strokeWidth={2.5} />
+                                </span>
+                            </StarBorder>
                         </a>
                         <a
                             href="#security"
@@ -686,8 +708,11 @@ function CTASection() {
     const [email, setEmail] = useState('')
 
     return (
-        <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8">
-            <div className="max-w-4xl mx-auto">
+        <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8 border-t border-[#1a1a1a] overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-30 z-0 h-full w-full">
+                <Hyperspeed />
+            </div>
+            <div className="relative z-10 max-w-4xl mx-auto">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -737,13 +762,17 @@ function CTASection() {
                                         placeholder="Enter your email"
                                         className="w-full sm:flex-1 px-5 py-3.5 rounded-full bg-[#0a0a0a] border border-[#333] text-white text-sm placeholder:text-[#eeeded]/40 focus:border-[#00ffab]/50 focus:outline-none transition-colors"
                                     />
-                                    <button
-                                        type="submit"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
-                                    >
-                                        Start for free
-                                        <ArrowRight size={16} strokeWidth={2.5} />
-                                    </button>
+                                        <StarBorder
+                                            as="button"
+                                            className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow whitespace-nowrap"
+                                            color="#00ffab"
+                                            speed="3s"
+                                        >
+                                            <span className="flex items-center justify-center gap-2">
+                                                Start for free
+                                                <ArrowRight size={16} strokeWidth={2.5} />
+                                            </span>
+                                        </StarBorder>
                                 </form>
                             </div>
                         </SpotlightCard>
