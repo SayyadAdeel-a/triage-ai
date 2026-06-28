@@ -472,6 +472,7 @@ function ProblemSection() {
                     variants={staggerContainer}
                 >
                     <MagicBento 
+                        cards={coreFeatures}
                         textAutoHide={false}
                         enableStars={true}
                         enableSpotlight={true}
@@ -488,6 +489,15 @@ function ProblemSection() {
         </section>
     )
 }
+
+const coreFeatures = [
+    { color: '#111111', title: 'Smart Categorization', description: 'Instantly routes incoming emails into actionable, high-priority folders.', label: 'Categorization' },
+    { color: '#111111', title: 'Autonomous Drafting', description: 'Pre-writes highly accurate replies based on your past email history so you only have to review and send.', label: 'Drafting' },
+    { color: '#111111', title: 'Custom Knowledge Base', description: 'Upload documents to train the AI on how to answer specific business questions and automatically generate accurate responses.', label: 'Training' },
+    { color: '#111111', title: 'Autopilot Mode', description: 'Runs 24/7 in the background so you wake up to a perfectly clean inbox.', label: 'Automation' },
+    { color: '#111111', title: 'Bulk Actions', description: 'Archive or delete entire categories of useless emails with a single click.', label: 'Actions' },
+    { color: '#111111', title: 'Local Processing', description: 'Uses local models and secure APIs to keep your private data entirely on your machine. Your data never leaves your environment.', label: 'Security' }
+];
 
 const outcomesFeatures = [
     { color: '#111111', title: '10 Hours Saved', description: 'Per team, per department. Automated workflows.', label: '10 Hours' },
