@@ -15,6 +15,8 @@ import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
 import MagicBento, { ParticleCard } from './components/ui/MagicBento'
+import GradientText from './components/ui/GradientText'
+import TextPressure from './components/ui/TextPressure'
 
 
 /* ------------------------------------------------------------------
@@ -341,7 +343,9 @@ function Hero() {
                         variants={fadeUp}
                         className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.05] mb-6"
                     >
-                        Take back control.<br /><span className="gradient-text">Your AI executive assistant.</span>
+                        <GradientText colors={["#40ffaa", "#4079ff", "#40ffaa"]} animationSpeed={4} showBorder={false} className="inline-block">
+                            Take back control.<br />Your AI executive assistant.
+                        </GradientText>
                     </motion.h1>
 
                     <motion.p
@@ -421,12 +425,24 @@ function IntroStatement() {
                     viewport={{ once: true, margin: '-100px' }}
                     variants={staggerContainer}
                 >
-                    <motion.h2
+                    <motion.div
                         variants={fadeUp}
                         className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-8"
                     >
-                        Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow.
-                    </motion.h2>
+                        <div className="relative w-full h-[100px] md:h-[150px]">
+                            <TextPressure 
+                                text="Seamlessly integrates with Gmail, Outlook, LinkedIn, Slack, and Notion to unify your workflow."
+                                flex={true}
+                                alpha={false}
+                                stroke={false}
+                                width={true}
+                                weight={true}
+                                italic={true}
+                                textColor="#ffffff"
+                                minFontSize={24}
+                            />
+                        </div>
+                    </motion.div>
 
                     <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a
@@ -686,8 +702,11 @@ function CTASection() {
     const [email, setEmail] = useState('')
 
     return (
-        <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8">
-            <div className="max-w-4xl mx-auto">
+        <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8 border-t border-[#1a1a1a] overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-30 z-0 h-full w-full">
+                <Aurora colorStops={["#c084fc", "#00ffab", "#f472b6"]} blend={0.6} amplitude={1.2} speed={0.5} />
+            </div>
+            <div className="relative z-10 max-w-4xl mx-auto">
                 <motion.div
                     initial="hidden"
                     whileInView="visible"
