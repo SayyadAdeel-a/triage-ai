@@ -49,7 +49,7 @@ const updateCardGlowProperties = (card: HTMLElement, mouseX: number, mouseY: num
   card.style.setProperty('--glow-radius', `${radius}px`);
 };
 
-const ParticleCard = ({
+export const ParticleCard = ({
   children,
   className = '',
   disableAnimations = false,

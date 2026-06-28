@@ -14,7 +14,7 @@ import BorderGlow from './BorderGlow'
 import SpotlightCard from './SpotlightCard'
 import Aurora from './Aurora'
 import { NavBar as TubelightNavbar } from './components/ui/tubelight-navbar'
-import MagicBento from './components/ui/MagicBento'
+import MagicBento, { ParticleCard } from './components/ui/MagicBento'
 
 
 /* ------------------------------------------------------------------
@@ -127,7 +127,8 @@ function PricingTier({ name, price, description, features, highlighted, delay = 
             custom={delay}
             className="group relative h-full"
         >
-            <SpotlightCard className={`w-full h-full relative rounded-[28px] p-7 flex flex-col transition-all duration-300 ${highlighted
+            <ParticleCard className="w-full h-full rounded-[28px]" glowColor="0, 255, 171" enableTilt={true} clickEffect={true} enableMagnetism={true} particleCount={8}>
+                <SpotlightCard className={`w-full h-full relative rounded-[28px] p-7 flex flex-col transition-all duration-300 ${highlighted
                     ? 'bg-gradient-to-b from-[#00ffab]/10 to-[#0a0a0a] border border-[#00ffab]/30 glow-mint'
                     : 'card-surface hover:border-[#333]'
                 }`} spotlightColor="rgba(0, 255, 171, 0.15)">
@@ -163,6 +164,7 @@ function PricingTier({ name, price, description, features, highlighted, delay = 
                     ))}
                 </ul>
             </SpotlightCard>
+            </ParticleCard>
         </motion.div>
     )
 }
@@ -174,6 +176,7 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
             custom={delay}
             className="group relative"
         >
+            <ParticleCard className="w-full h-full rounded-[28px]" glowColor="0, 255, 171" enableTilt={true} clickEffect={true} enableMagnetism={true} particleCount={8}>
             <BorderGlow
                 className="w-full h-full"
                 edgeSensitivity={60}
@@ -208,6 +211,7 @@ function TeamMember({ name, role, image, delay = 0 }: TeamMemberProps) {
                     </div>
                 </SpotlightCard>
             </BorderGlow>
+            </ParticleCard>
         </motion.div>
     )
 }
