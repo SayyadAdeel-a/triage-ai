@@ -51,20 +51,24 @@ export function NavBar({ items, className }: NavBarProps) {
       if (sectionsData.length === 0) updateSections()
       if (sectionsData.length === 0) return
 
-      const scrollPosition = y + window.innerHeight / 3
+      // Calculate perfect active scroll positions for each section
+      const activeScrollPositions = sectionsData.map((section, index) => {
+        if (index === 0) return 0 // The first section is perfectly active at the very top
+        return section.top - window.innerHeight / 3
+      })
 
       let currentAnalogIndex = 0
 
-      if (scrollPosition <= sectionsData[0].top) {
+      if (y <= activeScrollPositions[0]) {
         currentAnalogIndex = 0
-      } else if (scrollPosition >= sectionsData[sectionsData.length - 1].top) {
-        currentAnalogIndex = sectionsData.length - 1
+      } else if (y >= activeScrollPositions[activeScrollPositions.length - 1]) {
+        currentAnalogIndex = activeScrollPositions.length - 1
       } else {
-        for (let i = 0; i < sectionsData.length - 1; i++) {
-          const curr = sectionsData[i]
-          const next = sectionsData[i + 1]
-          if (scrollPosition >= curr.top && scrollPosition < next.top) {
-            const progress = (scrollPosition - curr.top) / (next.top - curr.top)
+        for (let i = 0; i < activeScrollPositions.length - 1; i++) {
+          const currY = activeScrollPositions[i]
+          const nextY = activeScrollPositions[i + 1]
+          if (y >= currY && y < nextY) {
+            const progress = (y - currY) / (nextY - currY)
             currentAnalogIndex = i + progress
             break
           }
