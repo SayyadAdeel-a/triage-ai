@@ -217,3 +217,13 @@
   position: relative;
   user-select: none;
 }
+
+
+.layout-3-col {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+.layout-3-col .magic-bento-card {
+  grid-column: span 1 !important;
+  grid-row: span 1 !important;
+}

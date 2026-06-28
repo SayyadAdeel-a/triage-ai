@@ -533,6 +533,7 @@ function OutcomesSection() {
                     variants={staggerContainer}
                 >
                     <MagicBento 
+                        className="layout-3-col"
                         cards={outcomesFeatures}
                         textAutoHide={false}
                         enableStars={true}
