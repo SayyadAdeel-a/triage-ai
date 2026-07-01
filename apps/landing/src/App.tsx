@@ -770,60 +770,71 @@ function CTASection() {
 }
 
 function Footer() {
-    const footerLinks = {
-        Product: ['Security', 'Process', 'Pricing'],
-        Company: ['Team', 'Contact', 'Book a Call'],
-        Legal: ['Terms of Service', 'Privacy Policy']
-    }
-
     return (
-        <footer className="bg-[#00ffab] text-[#0a0a0a]">
-            <div className="max-w-7xl mx-auto px-5 md:px-8 py-14 md:py-20">
-                <div className="flex flex-col lg:flex-row justify-between gap-12">
-                    <div>
-                        <a
-                            href="#"
-                            className="flex items-center gap-3 text-xl font-bold tracking-[0.12em] uppercase text-[#0a0a0a]"
-                        >
-                            <img src="/triageai_icon_mark.jpg" alt="TriageAI Logo" className="w-8 h-8 rounded-md shadow-md" />
-                            TriageAI
-                        </a>
-                        <p className="mt-4 text-sm text-[#0a0a0a]/70 max-w-xs leading-relaxed">
-                            Secure, self-hosted AI infrastructure for teams that refuse to compromise on control.
-                        </p>
-                    </div>
+        <footer className="relative bg-[#050505] text-[#eeeded] min-h-[70vh] flex flex-col items-center justify-between overflow-hidden border-t border-white/5 pt-24 pb-10">
+            {/* Background Aurora */}
+            <div 
+                className="absolute inset-0 z-0 opacity-60 pointer-events-none" 
+                style={{ 
+                    maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)', 
+                    WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)' 
+                }}
+            >
+                <Aurora colorStops={["#000000", "#1ed43c", "#00ffab"]} blend={0.6} amplitude={1.2} speed={0.4} />
+            </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-10">
-                        {Object.entries(footerLinks).map(([group, links]) => (
-                            <div key={group}>
-                                <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-[#0a0a0a]/50 mb-4">
-                                    {group}
-                                </h4>
-                                <ul className="space-y-3">
-                                    {links.map((link) => (
-                                        <li key={link}>
-                                            <a
-                                                href="#"
-                                                className="text-sm font-medium text-[#0a0a0a]/80 hover:text-[#0a0a0a] transition-colors"
-                                            >
-                                                {link}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
+            {/* Content Container */}
+            <div className="relative z-10 w-full max-w-5xl mx-auto px-5 flex flex-col items-center justify-center text-center flex-1">
+                
+                {/* Top Badge */}
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="h-[1px] w-12 bg-gradient-to-l from-white/30 to-transparent"></div>
+                    <span className="text-sm italic font-serif text-white/60 tracking-wider">Limited spots available</span>
+                    <div className="h-[1px] w-12 bg-gradient-to-r from-white/30 to-transparent"></div>
                 </div>
 
-                <div className="mt-14 pt-8 border-t border-[#0a0a0a]/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-xs text-[#0a0a0a]/60">
-                        © 2024 TriageAI. All rights reserved.
-                    </p>
-                    <div className="flex items-center gap-2 text-xs text-[#0a0a0a]/60">
-                        <span>Made with</span>
-                        <span className="font-semibold">Webild</span>
-                    </div>
+                {/* Main Heading */}
+                <h2 className="text-5xl md:text-8xl font-medium tracking-tight mb-8">
+                    Let's <span className="text-white/40">Connect</span>
+                </h2>
+
+                {/* Subtext */}
+                <p className="text-base md:text-lg text-white/50 max-w-md mb-12 leading-relaxed">
+                    Feel free to contact us if you have any questions.<br/>
+                    We're available for new projects or just for chatting.
+                </p>
+
+                {/* Button */}
+                <a 
+                    href="mailto:hello@triageai.com" 
+                    className="group relative inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full bg-[#0a0a0a] border border-white/10 text-white font-medium hover:border-[#00ffab]/40 hover:bg-[#00ffab]/10 transition-all duration-300"
+                >
+                    Book a free intro call
+                    <ArrowRight size={16} className="text-white/50 group-hover:text-[#00ffab] group-hover:translate-x-1 transition-all" />
+                </a>
+
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="relative z-10 w-full max-w-6xl mx-auto px-5 mt-20 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-3 text-sm text-white/40 hover:text-white/70 transition-colors">
+                    <img src="/triageai_icon_mark.jpg" alt="TriageAI Logo" className="w-5 h-5 rounded-sm opacity-50 grayscale" />
+                    <span>© TriageAI, 2026</span>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-[#00ffab] hover:border-[#00ffab]/40 hover:bg-[#00ffab]/5 transition-all">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                    </a>
+                    <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-[#00ffab] hover:border-[#00ffab]/40 hover:bg-[#00ffab]/5 transition-all">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                    </a>
+                    <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-[#00ffab] hover:border-[#00ffab]/40 hover:bg-[#00ffab]/5 transition-all">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+                    </a>
+                    <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/40 hover:text-[#00ffab] hover:border-[#00ffab]/40 hover:bg-[#00ffab]/5 transition-all">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                    </a>
                 </div>
             </div>
         </footer>
