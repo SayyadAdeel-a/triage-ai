@@ -771,8 +771,9 @@ function CTASection() {
 
 function Footer() {
     return (
-        <footer className="relative bg-[#050505] text-[#eeeded] min-h-[70vh] flex flex-col items-center justify-between overflow-hidden border-t border-white/5 pt-24 pb-10">
-            {/* Background Aurora */}
+        <section className="px-4 md:px-8 pb-8">
+            <footer className="relative bg-[#050505] text-[#eeeded] min-h-[70vh] flex flex-col items-center justify-between overflow-hidden rounded-[2.5rem] border border-white/10 pt-24 pb-10">
+                {/* Background Aurora */}
             <div 
                 className="absolute inset-0 z-0 opacity-60 pointer-events-none" 
                 style={{ 
@@ -838,6 +839,7 @@ function Footer() {
                 </div>
             </div>
         </footer>
+        </section>
     )
 }
 
