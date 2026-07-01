@@ -783,8 +783,9 @@ function Footer() {
                     <div>
                         <a
                             href="#"
-                            className="text-xl font-bold tracking-[0.12em] uppercase text-[#0a0a0a]"
+                            className="flex items-center gap-3 text-xl font-bold tracking-[0.12em] uppercase text-[#0a0a0a]"
                         >
+                            <img src="/triageai_icon_mark.jpg" alt="TriageAI Logo" className="w-8 h-8 rounded-md shadow-md" />
                             TriageAI
                         </a>
                         <p className="mt-4 text-sm text-[#0a0a0a]/70 max-w-xs leading-relaxed">

@@ -15,6 +15,9 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "TriageAI - Smart Inbox Manager",
   description: "AI-powered email and LinkedIn inbox manager for founders and CEOs",
+  icons: {
+    icon: "/triageai_icon_mark.jpg",
+  },
 };
 
 export default async function RootLayout({

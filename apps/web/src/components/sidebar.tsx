@@ -20,7 +20,7 @@ export function Sidebar({ isEmailConnected = false, isLinkedInConnected = false 
     <aside className="w-64 h-full border-r border-white/5 bg-black/30 backdrop-blur-3xl flex flex-col">
       <div className="p-6">
         <h1 className="text-2xl font-bold tracking-tighter flex items-center gap-2 text-white">
-          <Zap className="w-6 h-6 text-primary fill-primary/10 filter drop-shadow-[0_0_8px_rgba(30,212,60,0.5)]" />
+          <img src="/triageai_icon_mark.jpg" alt="TriageAI Logo" className="w-8 h-8 rounded-md shadow-[0_0_8px_rgba(30,212,60,0.5)]" />
           <span>TriageAI</span>
         </h1>
         <p className="text-[10px] text-primary/70 mt-1.5 tracking-[0.15em] uppercase font-bold text-glow">Desktop Edition</p>
