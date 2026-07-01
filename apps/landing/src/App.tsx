@@ -694,81 +694,6 @@ function TeamSection() {
     )
 }
 
-function CTASection() {
-    const [email, setEmail] = useState('')
-
-    return (
-        <section id="cta" className="relative py-24 md:py-32 px-5 md:px-8 border-t border-[#1a1a1a] overflow-hidden">
-            <div className="absolute inset-0 pointer-events-none opacity-30 z-0 h-full w-full rotate-180">
-                <Aurora colorStops={["#c084fc", "#00ffab", "#f472b6"]} blend={0.6} amplitude={1.2} speed={0.5} />
-            </div>
-            <div className="relative z-10 max-w-4xl mx-auto">
-                <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: '-100px' }}
-                    variants={scaleIn}
-                    className="relative"
-                >
-                    <BorderGlow
-                        className="w-full h-full"
-                        edgeSensitivity={60}
-                        glowColor="40 80 80"
-                        backgroundColor="#120F17"
-                        borderRadius={40}
-                        glowRadius={120}
-                        glowIntensity={2.5}
-                        coneSpread={25}
-                        animated={false}
-                        colors={['#c084fc', '#f472b6', '#38bdf8']}
-                    >
-                        <SpotlightCard className="overflow-hidden card-surface p-10 md:p-16 text-center w-full h-full rounded-[40px] relative z-10" spotlightColor="rgba(0, 255, 171, 0.15)">
-                            <div className="absolute inset-0 bg-gradient-to-b from-[#00ffab]/5 to-transparent pointer-events-none" />
-                            <div className="relative z-10">
-                                <SectionLabel>Get Started</SectionLabel>
-                                <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15] mb-5 flex justify-center flex-wrap">
-                                    <BlurText text="Ready to take back control of your inbox?" delay={50} animateBy="words" direction="bottom" />
-                                </h2>
-                                <p className="text-base md:text-lg text-[#eeeded]/60 leading-relaxed mb-10 max-w-xl mx-auto">
-                                    Join thousands of executives saving 10+ hours a week.
-                                </p>
-
-                                <form
-                                    onSubmit={(e) => {
-                                        e.preventDefault()
-                                        alert(`Thanks! We'll reach out at ${email}`)
-                                    }}
-                                    className="flex flex-col sm:flex-row items-center gap-3 max-w-md mx-auto"
-                                >
-                                    <label htmlFor="cta-email" className="sr-only">
-                                        Email address
-                                    </label>
-                                    <input
-                                        id="cta-email"
-                                        type="email"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        placeholder="Enter your email"
-                                        className="w-full sm:flex-1 px-5 py-3.5 rounded-full bg-[#0a0a0a] border border-[#333] text-white text-sm placeholder:text-[#eeeded]/40 focus:border-[#00ffab]/50 focus:outline-none transition-colors"
-                                    />
-                                    <button
-                                        type="submit"
-                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#00ffab] text-[#0a0a0a] text-sm font-semibold hover:bg-[#00e69d] transition-all duration-200 btn-primary-shadow"
-                                    >
-                                        Start for free
-                                        <ArrowRight size={16} strokeWidth={2.5} />
-                                    </button>
-                                </form>
-                            </div>
-                        </SpotlightCard>
-                    </BorderGlow>
-                </motion.div>
-            </div>
-        </section>
-    )
-}
-
 function Footer() {
     return (
         <section className="px-4 md:px-8 pb-8">
@@ -859,7 +784,6 @@ function App() {
                     <PricingSection />
                     <TeamSection />
                     <FAQ />
-                    <CTASection />
                 </main>
                 <Footer />
             </div>
